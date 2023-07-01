@@ -36,7 +36,7 @@ class PortfolioPerformanceXML2DB:
         return el.find("uuid").text
 
     def handle_security(self, el):
-        props = ["uuid", "name", "currencyCode", "note", "isin", "tickerSymbol", "wkn", "feed", "isRetired", "updatedAt"]
+        props = ["uuid", "name", "currencyCode", "note", "isin", "tickerSymbol", "wkn", "feedTickerSymbol", "feed", "isRetired", "updatedAt"]
         sec = self.parse_props(el, props)
         dbhelper.insert("security", sec, or_replace=True)
 

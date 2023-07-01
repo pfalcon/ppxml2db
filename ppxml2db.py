@@ -58,6 +58,17 @@ class PortfolioPerformanceXML2DB:
             price_fields["security"] = sec["uuid"]
             dbhelper.insert("price", price_fields, or_replace=True)
 
+        attr_els = el.findall("attributes/map/entry")
+        for seq, attr_el in enumerate(attr_els):
+            els = attr_el.findall("*")
+            assert len(els) == 2
+            assert els[0].tag == "string"
+            fields = {
+                "security": sec["uuid"], "attr_uuid": els[0].text,
+                "type": els[1].tag, "value": els[1].text, "seq": seq,
+            }
+            dbhelper.insert("security_attr", fields, or_replace=True)
+
     def handle_account(self, el):
         props = ["uuid", "name", "currencyCode", "isRetired", "updatedAt"]
         fields = self.parse_props(el, props)

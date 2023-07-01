@@ -73,6 +73,14 @@ class PortfolioPerformanceXML2DB:
             }
             dbhelper.insert("security_attr", fields, or_replace=True)
 
+        prop_els = el.findall("property")
+        for seq, prop_el in enumerate(prop_els):
+            fields = {
+                "security": sec["uuid"], "type": prop_el.get("type"),
+                "name": prop_el.get("name"), "value": prop_el.text, "seq": seq,
+            }
+            dbhelper.insert("security_prop", fields, or_replace=True)
+
     def handle_account(self, el):
         props = ["uuid", "name", "currencyCode", "isRetired", "updatedAt"]
         fields = self.parse_props(el, props)

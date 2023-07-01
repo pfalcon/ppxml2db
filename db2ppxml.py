@@ -60,6 +60,12 @@ def main():
 
         events = ET.SubElement(sec, "events")
 
+        for prop_r in dbhelper.select("security_prop", where="security='%s'" % sec_r["uuid"], order="seq"):
+            p = ET.SubElement(sec, "property")
+            p.set("type", prop_r["type"])
+            p.set("name", prop_r["name"])
+            p.text = prop_r["value"]
+
         make_prop(sec, sec_r, "isRetired")
         make_prop(sec, sec_r, "updatedAt")
 

@@ -38,13 +38,17 @@ def insert(table, fields=None, or_replace=False, **kw):
     return id
 
 
-def select(table, where=None):
+def select(table, where=None, order=None):
     cursor = db.cursor()
     if where is None:
         where = ""
     else:
         where = " WHERE " + where
-    cursor.execute("SELECT * FROM %s%s" % (table, where))
+    if order is None:
+        order = ""
+    else:
+        order = "ORDER BY " + order
+    cursor.execute("SELECT * FROM %s%s%s" % (table, where, order))
     return cursor.fetchall()
 
 

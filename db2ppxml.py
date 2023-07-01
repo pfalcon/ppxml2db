@@ -29,6 +29,7 @@ def main():
     #    print(dict(sec_r))
         sec = ET.SubElement(securities, "security")
         make_prop(sec, sec_r, "uuid")
+        make_prop(sec, sec_r, "onlineId")
         make_prop(sec, sec_r, "name")
         make_prop(sec, sec_r, "currencyCode")
         make_prop(sec, sec_r, "note")

@@ -5,6 +5,10 @@ import xml.etree.ElementTree as ET
 import dbhelper
 
 
+# uuid to #
+sec_map = {}
+
+
 def make_prop(pel, row, prop):
     if row[prop] is not None:
         el = ET.SubElement(pel, prop)
@@ -19,14 +23,23 @@ def make_map(pel, rows):
         ET.SubElement(enel, r["type"]).text = r["value"]
 
 
+def security_ref(uuid):
+    ref = "../../../../securities/security"
+    i = sec_map[uuid]
+    if i != 0:
+        ref += "[%d]" % (i + 1)
+    return ref
+
+
 def main():
     root = ET.Element("client")
     ET.SubElement(root, "version").text = "56"
     ET.SubElement(root, "baseCurrency").text = "USD"
     securities = ET.SubElement(root, "securities")
 
-    for sec_r in dbhelper.select("security"):
+    for i, sec_r in enumerate(dbhelper.select("security")):
     #    print(dict(sec_r))
+        sec_map[sec_r["uuid"]] = i
         sec = ET.SubElement(securities, "security")
         make_prop(sec, sec_r, "uuid")
         make_prop(sec, sec_r, "onlineId")
@@ -68,6 +81,15 @@ def main():
 
         make_prop(sec, sec_r, "isRetired")
         make_prop(sec, sec_r, "updatedAt")
+
+    watchlists = ET.SubElement(root, "watchlists")
+    for wlist_r in dbhelper.select("watchlist"):
+        wlist = ET.SubElement(watchlists, "watchlist")
+        make_prop(wlist, wlist_r, "name")
+        secs = ET.SubElement(wlist, "securities")
+        for wlist_sec_r in dbhelper.select("watchlist_security", where="list=%d" % wlist_r["_id"]):
+            s = ET.SubElement(secs, "security")
+            s.set("reference", security_ref(wlist_sec_r["security"]))
 
 
     ET.indent(root)

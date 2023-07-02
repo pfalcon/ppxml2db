@@ -214,6 +214,8 @@ def main():
     for acc_r in dbhelper.select("account", where="type='portfolio'"):
         make_portfolio(etree, portfolios, acc_r["uuid"])
 
+    plans = ET.SubElement(root, "plans")
+
 
     ET.indent(root)
     ET.dump(root)

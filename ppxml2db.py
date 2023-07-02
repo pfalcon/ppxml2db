@@ -102,6 +102,17 @@ class PortfolioPerformanceXML2DB:
             fields = {"list": id, "security": self.uuid(sec)}
             dbhelper.insert("watchlist_security", fields, or_replace=True)
 
+    def handle_account_xact(self, acc_uuid, el):
+        el = self.resolve(el)
+        props = ["uuid", "date", "currencyCode", "amount", "shares", "note", "updatedAt", "type"]
+        fields = self.parse_props(el, props)
+        fields["account"] = acc_uuid
+        fields["acctype"] = "account"
+        sec = el.find("security")
+        if sec is not None:
+            fields["security"] = self.uuid(sec)
+        dbhelper.insert("xact", fields, or_replace=True)
+
     def __init__ (self, etree):
         self.etree = etree
 
@@ -119,6 +130,11 @@ class PortfolioPerformanceXML2DB:
         portfolio_els = self.etree.findall("portfolios/portfolio")
         for el in portfolio_els:
             self.handle_portfolio(el)
+
+        for acc_el in self.etree.findall("accounts/account"):
+            acc_uuid = self.uuid(acc_el)
+            for xact_el in acc_el.findall(".//account-transaction"):
+                self.handle_account_xact(acc_uuid, xact_el)
 
 
 if __name__ == "__main__":

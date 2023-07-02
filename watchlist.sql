@@ -1,0 +1,5 @@
+CREATE TABLE watchlist(
+_id INTEGER NOT NULL,
+name VARCHAR(64) NOT NULL,
+PRIMARY KEY(_id)
+);

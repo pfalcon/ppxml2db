@@ -94,12 +94,23 @@ class PortfolioPerformanceXML2DB:
         fields["referenceAccount"] = self.uuid(acc)
         dbhelper.insert("portfolio", fields, or_replace=True)
 
+    def handle_watchlist(self, el):
+        fields = self.parse_props(el, ["name"])
+        id = dbhelper.insert("watchlist", fields, or_replace=True)
+        for sec in el.findall("securities/security"):
+            sec = self.resolve(sec)
+            fields = {"list": id, "security": self.uuid(sec)}
+            dbhelper.insert("watchlist_security", fields, or_replace=True)
+
     def __init__ (self, etree):
         self.etree = etree
 
         security_els = self.etree.findall("securities/security")
         for s in security_els:
             self.handle_security(s)
+
+        for w in self.etree.findall("watchlists/watchlist"):
+            self.handle_watchlist(w)
 
         account_els = self.etree.findall("accounts/account")
         for el in account_els:

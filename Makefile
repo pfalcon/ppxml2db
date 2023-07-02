@@ -1,6 +1,7 @@
 PYTHON = python3
 DB = pp.db
-TABLES = .account .portfolio .security .security_attr .security_prop .latest_price .price
+TABLES = .account .portfolio .security .security_attr .security_prop .latest_price .price \
+    .watchlist .watchlist_security
 
 
 all:

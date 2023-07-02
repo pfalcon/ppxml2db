@@ -154,6 +154,18 @@ class PortfolioPerformanceXML2DB:
             for xact_el in acc_el.findall(".//portfolio-transaction"):
                 self.handle_xact("portfolio", acc_uuid, xact_el)
 
+        for x_el in self.etree.findall("//crossEntry"):
+            if x_el.get("reference") is not None:
+                continue
+            fields = {
+                "type": x_el.get("class"),
+                "portfolio": self.uuid(x_el.find("portfolio")),
+                "portfolio_xact": self.uuid(x_el.find("portfolioTransaction")),
+                "account": self.uuid(x_el.find("account")),
+                "account_xact": self.uuid(x_el.find("accountTransaction")),
+            }
+            dbhelper.insert("xact_cross_entry", fields, or_replace=True)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

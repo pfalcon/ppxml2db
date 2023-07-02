@@ -84,6 +84,7 @@ class PortfolioPerformanceXML2DB:
     def handle_account(self, el):
         props = ["uuid", "name", "currencyCode", "isRetired", "updatedAt"]
         fields = self.parse_props(el, props)
+        fields["type"] = "account"
         dbhelper.insert("account", fields, or_replace=True)
 
     def handle_portfolio(self, el):
@@ -92,7 +93,8 @@ class PortfolioPerformanceXML2DB:
         fields = self.parse_props(el, props)
         acc = self.resolve(el.find("referenceAccount"))
         fields["referenceAccount"] = self.uuid(acc)
-        dbhelper.insert("portfolio", fields, or_replace=True)
+        fields["type"] = "portfolio"
+        dbhelper.insert("account", fields, or_replace=True)
 
     def handle_watchlist(self, el):
         fields = self.parse_props(el, ["name"])

@@ -92,7 +92,7 @@ def main():
             s.set("reference", security_ref(wlist_sec_r["security"]))
 
     accounts = ET.SubElement(root, "accounts")
-    for acc_r in dbhelper.select("account"):
+    for acc_r in dbhelper.select("account", where="type='account'"):
         acc = ET.SubElement(accounts, "account")
         make_prop(acc, acc_r, "uuid")
         make_prop(acc, acc_r, "name")

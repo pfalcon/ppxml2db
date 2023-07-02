@@ -1,12 +1,19 @@
 import sys
+import os.path
 
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 
 import dbhelper
 
 
 # uuid to #
 sec_map = {}
+
+# uuid to element
+output_els = {}
+
+# (portfolio_xact, account_xact) to element
+cross_els = {}
 
 
 def make_prop(pel, row, prop):
@@ -23,16 +30,109 @@ def make_map(pel, rows):
         ET.SubElement(enel, r["type"]).text = r["value"]
 
 
-def security_ref(uuid):
-    ref = "../../../../securities/security"
+def security_ref(uuid, levels=4):
+    ref = "../" * levels + "securities/security"
     i = sec_map[uuid]
     if i != 0:
         ref += "[%d]" % (i + 1)
     return ref
 
 
+def make_ref(etree, el, to_el):
+    rel_path = os.path.relpath(etree.getelementpath(to_el), etree.getelementpath(el))
+    rel_path = rel_path.replace("[1]", "")
+    el.set("reference", rel_path)
+
+
+def try_ref(etree, el, uuid):
+    if uuid in output_els:
+        make_ref(etree, el, output_els[uuid])
+        return True
+
+
+def make_xact(etree, pel, tag, xact_r):
+            xact = ET.SubElement(pel, tag)
+            if try_ref(etree, xact, xact_r["uuid"]):
+                return
+
+            output_els[xact_r["uuid"]] = xact
+            make_prop(xact, xact_r, "uuid")
+            make_prop(xact, xact_r, "date")
+            make_prop(xact, xact_r, "currencyCode")
+            make_prop(xact, xact_r, "amount")
+            if xact_r["security"] is not None:
+                s = ET.SubElement(xact, "security")
+                #s.set("reference", security_ref(xact_r["security"], 5))
+                assert try_ref(etree, s, xact_r["security"])
+
+            # 0 or 1
+            if xact_r["acctype"] == "account":
+                crit = "account_xact='%s'"
+            else:
+                crit = "portfolio_xact='%s'"
+            for x_r in dbhelper.select("xact_cross_entry", where=crit % xact_r["uuid"]):
+                #print(x_r)
+                x = ET.SubElement(xact, "crossEntry")
+                x.set("class", x_r["type"])
+                cross_key = (x_r["portfolio_xact"], x_r["account_xact"])
+                existing_x = cross_els.get(cross_key)
+                if existing_x is not None:
+                    make_ref(etree, x, existing_x)
+                    continue
+                cross_els[cross_key] = x
+                make_portfolio(etree, x, x_r["portfolio"])
+                rf = ET.SubElement(x, "portfolioTransaction")
+                assert try_ref(etree, rf, x_r["portfolio_xact"])
+                rf = ET.SubElement(x, "account")
+                assert try_ref(etree, rf, x_r["account"])
+
+                acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["account_xact"])[0]
+                make_xact(etree, x, "accountTransaction", acc_xact_r)
+
+            make_prop(xact, xact_r, "shares")
+            make_prop(xact, xact_r, "note")
+
+            unit_rows = dbhelper.select("xact_unit", where="xact='%s'" % xact_r["uuid"])
+            if unit_rows:
+                units = ET.SubElement(xact, "units")
+                for unit_r in unit_rows:
+                    u = ET.SubElement(units, "unit")
+                    u.set("type", unit_r["type"])
+                    a = ET.SubElement(u, "amount")
+                    a.set("currency", unit_r["currencyCode"])
+                    a.set("amount", str(unit_r["amount"]))
+
+            make_prop(xact, xact_r, "updatedAt")
+            make_prop(xact, xact_r, "type")
+
+
+def make_xacts(etree, pel, acc_uuid):
+        for xact_r in dbhelper.select("xact", where="account='%s'" % acc_uuid):
+            tag = {"account": "account-transaction", "portfolio": "portfolio-transaction"}[xact_r["acctype"]]
+            make_xact(etree, pel, tag, xact_r)
+
+
+def make_portfolio(etree, pel, uuid):
+        el = ET.SubElement(pel, "portfolio")
+        if try_ref(etree, el, uuid):
+            return
+        output_els[uuid] = el
+        port_r = dbhelper.select("account", where="uuid='%s'" % uuid)[0]
+        make_prop(el, port_r, "uuid")
+        make_prop(el, port_r, "name")
+        make_prop(el, port_r, "isRetired")
+        a = ET.SubElement(el, "referenceAccount")
+        assert try_ref(etree, a, port_r["referenceAccount"])
+
+        xacts = ET.SubElement(el, "transactions")
+        make_xacts(etree, xacts, port_r["uuid"])
+
+        make_prop(el, port_r, "updatedAt")
+
+
 def main():
     root = ET.Element("client")
+    etree = ET.ElementTree(root)
     ET.SubElement(root, "version").text = "56"
     ET.SubElement(root, "baseCurrency").text = "USD"
     securities = ET.SubElement(root, "securities")
@@ -41,6 +141,7 @@ def main():
     #    print(dict(sec_r))
         sec_map[sec_r["uuid"]] = i
         sec = ET.SubElement(securities, "security")
+        output_els[sec_r["uuid"]] = sec
         make_prop(sec, sec_r, "uuid")
         make_prop(sec, sec_r, "onlineId")
         make_prop(sec, sec_r, "name")
@@ -94,10 +195,14 @@ def main():
     accounts = ET.SubElement(root, "accounts")
     for acc_r in dbhelper.select("account", where="type='account'"):
         acc = ET.SubElement(accounts, "account")
+        output_els[acc_r["uuid"]] = acc
         make_prop(acc, acc_r, "uuid")
         make_prop(acc, acc_r, "name")
         make_prop(acc, acc_r, "currencyCode")
         make_prop(acc, acc_r, "isRetired")
+
+        xacts = ET.SubElement(acc, "transactions")
+        make_xacts(etree, xacts, acc_r["uuid"])
 
         make_prop(acc, acc_r, "updatedAt")
 

@@ -91,6 +91,16 @@ def main():
             s = ET.SubElement(secs, "security")
             s.set("reference", security_ref(wlist_sec_r["security"]))
 
+    accounts = ET.SubElement(root, "accounts")
+    for acc_r in dbhelper.select("account"):
+        acc = ET.SubElement(accounts, "account")
+        make_prop(acc, acc_r, "uuid")
+        make_prop(acc, acc_r, "name")
+        make_prop(acc, acc_r, "currencyCode")
+        make_prop(acc, acc_r, "isRetired")
+
+        make_prop(acc, acc_r, "updatedAt")
+
 
     ET.indent(root)
     ET.dump(root)

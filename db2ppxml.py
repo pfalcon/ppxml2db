@@ -130,6 +130,20 @@ def make_portfolio(etree, pel, uuid):
         make_prop(el, port_r, "updatedAt")
 
 
+def make_account(etree, pel, acc_r):
+        acc = ET.SubElement(pel, "account")
+        output_els[acc_r["uuid"]] = acc
+        make_prop(acc, acc_r, "uuid")
+        make_prop(acc, acc_r, "name")
+        make_prop(acc, acc_r, "currencyCode")
+        make_prop(acc, acc_r, "isRetired")
+
+        xacts = ET.SubElement(acc, "transactions")
+        make_xacts(etree, xacts, acc_r["uuid"])
+
+        make_prop(acc, acc_r, "updatedAt")
+
+
 def main():
     root = ET.Element("client")
     etree = ET.ElementTree(root)
@@ -194,17 +208,7 @@ def main():
 
     accounts = ET.SubElement(root, "accounts")
     for acc_r in dbhelper.select("account", where="type='account'"):
-        acc = ET.SubElement(accounts, "account")
-        output_els[acc_r["uuid"]] = acc
-        make_prop(acc, acc_r, "uuid")
-        make_prop(acc, acc_r, "name")
-        make_prop(acc, acc_r, "currencyCode")
-        make_prop(acc, acc_r, "isRetired")
-
-        xacts = ET.SubElement(acc, "transactions")
-        make_xacts(etree, xacts, acc_r["uuid"])
-
-        make_prop(acc, acc_r, "updatedAt")
+        make_account(etree, accounts, acc_r)
 
 
     ET.indent(root)

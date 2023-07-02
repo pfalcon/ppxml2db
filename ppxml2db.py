@@ -104,16 +104,27 @@ class PortfolioPerformanceXML2DB:
             fields = {"list": id, "security": self.uuid(sec)}
             dbhelper.insert("watchlist_security", fields, or_replace=True)
 
-    def handle_account_xact(self, acc_uuid, el):
+    def handle_xact(self, acc_type, acc_uuid, el):
         el = self.resolve(el)
         props = ["uuid", "date", "currencyCode", "amount", "shares", "note", "updatedAt", "type"]
         fields = self.parse_props(el, props)
         fields["account"] = acc_uuid
-        fields["acctype"] = "account"
+        fields["acctype"] = acc_type
         sec = el.find("security")
         if sec is not None:
             fields["security"] = self.uuid(sec)
         dbhelper.insert("xact", fields, or_replace=True)
+
+        xact_uuid = fields["uuid"]
+        for unit_el in el.findall("units/unit"):
+            am_el = unit_el.find("amount")
+            fields = {
+                "xact": xact_uuid,
+                "type": unit_el.get("type"),
+                "amount": am_el.get("amount"),
+                "currencyCode": am_el.get("currency"),
+            }
+            dbhelper.insert("xact_unit", fields, or_replace=True)
 
     def __init__ (self, etree):
         self.etree = etree
@@ -136,7 +147,12 @@ class PortfolioPerformanceXML2DB:
         for acc_el in self.etree.findall("accounts/account"):
             acc_uuid = self.uuid(acc_el)
             for xact_el in acc_el.findall(".//account-transaction"):
-                self.handle_account_xact(acc_uuid, xact_el)
+                self.handle_xact("account", acc_uuid, xact_el)
+
+        for acc_el in self.etree.findall(".//portfolio"):
+            acc_uuid = self.uuid(acc_el)
+            for xact_el in acc_el.findall(".//portfolio-transaction"):
+                self.handle_xact("portfolio", acc_uuid, xact_el)
 
 
 if __name__ == "__main__":

@@ -159,6 +159,16 @@ def make_taxonomy_level(etree, pel, level_r):
         chds = ET.SubElement(level, "children")
         for e_r in dbhelper.select("taxonomy_category", where="parent='%s'" % level_r["uuid"]):
             make_taxonomy_level(etree, chds, e_r)
+
+        assgn = ET.SubElement(level, "assignments")
+        for a_r in dbhelper.select("taxonomy_assignment", where="category='%s'" % level_r["uuid"]):
+            a = ET.SubElement(assgn, "assignment")
+            iv = ET.SubElement(a, "investmentVehicle")
+            iv.set("class", a_r["item_type"])
+            assert try_ref(etree, iv, a_r["item"])
+            make_prop(a, a_r, "weight")
+            make_prop(a, a_r, "rank")
+
         make_prop(level, level_r, "weight")
         make_prop(level, level_r, "rank")
 

@@ -172,6 +172,13 @@ def make_taxonomy_level(etree, pel, level_r):
         make_prop(level, level_r, "weight")
         make_prop(level, level_r, "rank")
 
+        data_rows = dbhelper.select("taxonomy_data", where="category='%s'" % level_r["uuid"])
+        if data_rows:
+            data = ET.SubElement(level, "data")
+            for d_r in data_rows:
+                d_e = ET.SubElement(data, "entry")
+                ET.SubElement(d_e, "string").text = d_r["name"]
+                ET.SubElement(d_e, "string").text = d_r["value"]
 
 def main():
     root = ET.Element("client")

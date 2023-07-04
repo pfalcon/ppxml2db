@@ -136,9 +136,20 @@ class PortfolioPerformanceXML2DB:
         ren(fields, "id", "uuid")
         fields["parent"] = parent_uuid
         fields["taxonomy"] = taxon_uuid
+        level_uuid = fields["uuid"]
         dbhelper.insert("taxonomy_category", fields, or_replace=True)
+
+        for as_el in level_el.findall("assignments/assignment"):
+            props = ["weight", "rank"]
+            fields = self.parse_props(as_el, props)
+            el = as_el.find("investmentVehicle")
+            fields["item_type"] = el.get("class")
+            fields["item"] = self.uuid(el)
+            fields["category"] = level_uuid
+            dbhelper.insert("taxonomy_assignment", fields, or_replace=True)
+
         for ch_el in level_el.findall("children/classification"):
-            self.handle_taxonomy_level(taxon_uuid, fields["uuid"], ch_el)
+            self.handle_taxonomy_level(taxon_uuid, level_uuid, ch_el)
 
     def __init__ (self, etree):
         self.etree = etree

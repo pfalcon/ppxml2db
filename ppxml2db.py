@@ -39,6 +39,11 @@ class PortfolioPerformanceXML2DB:
             id_el = el.find("id")
         return id_el.text
 
+    def parse_entry(self, entry_el):
+        els = entry_el.findall("*")
+        assert len(els) == 2, len(els)
+        return [(e.tag, e.text) for e in els]
+
     def handle_security(self, el):
         props = [
             "uuid", "onlineId", "name", "currencyCode", "note",
@@ -138,6 +143,16 @@ class PortfolioPerformanceXML2DB:
         fields["taxonomy"] = taxon_uuid
         level_uuid = fields["uuid"]
         dbhelper.insert("taxonomy_category", fields, or_replace=True)
+
+        for data_el in level_el.findall("data/entry"):
+            data = self.parse_entry(data_el)
+            fields = {
+                "name": data[0][1],
+                "value": data[1][1],
+                "category": level_uuid,
+                "taxonomy": taxon_uuid,
+            }
+            dbhelper.insert("taxonomy_data", fields, or_replace=True)
 
         for as_el in level_el.findall("assignments/assignment"):
             props = ["weight", "rank"]

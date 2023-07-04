@@ -33,7 +33,11 @@ class PortfolioPerformanceXML2DB:
         return el
 
     def uuid(self, el):
-        return self.resolve(el).find("uuid").text
+        el = self.resolve(el)
+        id_el = el.find("uuid")
+        if id_el is None:
+            id_el = el.find("id")
+        return id_el.text
 
     def handle_security(self, el):
         props = [

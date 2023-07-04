@@ -130,6 +130,16 @@ class PortfolioPerformanceXML2DB:
             }
             dbhelper.insert("xact_unit", fields, or_replace=True)
 
+    def handle_taxonomy_level(self, taxon_uuid, parent_uuid, level_el):
+        props = ["id", "name", "color", "weight", "rank"]
+        fields = self.parse_props(level_el, props)
+        ren(fields, "id", "uuid")
+        fields["parent"] = parent_uuid
+        fields["taxonomy"] = taxon_uuid
+        dbhelper.insert("taxonomy_category", fields, or_replace=True)
+        for ch_el in level_el.findall("children/classification"):
+            self.handle_taxonomy_level(taxon_uuid, fields["uuid"], ch_el)
+
     def __init__ (self, etree):
         self.etree = etree
 
@@ -184,6 +194,7 @@ class PortfolioPerformanceXML2DB:
             root_el = taxon_el.find("root")
             fields["root"] = self.uuid(root_el)
             dbhelper.insert("taxonomy", fields, or_replace=True)
+            self.handle_taxonomy_level(fields["uuid"], None, root_el)
 
 
 if __name__ == "__main__":

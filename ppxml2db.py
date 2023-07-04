@@ -170,6 +170,21 @@ class PortfolioPerformanceXML2DB:
             }
             dbhelper.insert("xact_cross_entry", fields, or_replace=True)
 
+        for taxon_el in self.etree.findall("taxonomies/taxonomy"):
+            props = ["id", "name"]
+            fields = self.parse_props(taxon_el, props)
+            ren(fields, "id", "uuid")
+            for dim_els in taxon_el.findall("dimensions/string"):
+                dim_fields = {
+                    "taxonomy": fields["uuid"],
+                    "name": "dimension",
+                    "value": dim_els.text,
+                }
+                dbhelper.insert("taxonomy_data", dim_fields, or_replace=True)
+            root_el = taxon_el.find("root")
+            fields["root"] = self.uuid(root_el)
+            dbhelper.insert("taxonomy", fields, or_replace=True)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

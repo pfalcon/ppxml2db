@@ -16,10 +16,10 @@ output_els = {}
 cross_els = {}
 
 
-def make_prop(pel, row, prop):
-    if row[prop] is not None:
+def make_prop(pel, row, prop, row_prop=None):
+    if row[row_prop or prop] is not None:
         el = ET.SubElement(pel, prop)
-        el.text = str(row[prop])
+        el.text = str(row[row_prop or prop])
 
 
 def make_map(pel, rows):

@@ -144,6 +144,25 @@ def make_account(etree, pel, acc_r):
         make_prop(acc, acc_r, "updatedAt")
 
 
+def make_taxonomy_level(etree, pel, level_r):
+        tag = "root" if level_r["parent"] is None else "classification"
+        level = ET.SubElement(pel, tag)
+        output_els[level_r["uuid"]] = level
+        make_prop(level, level_r, "id", "uuid")
+        make_prop(level, level_r, "name")
+        make_prop(level, level_r, "color")
+
+        if level_r["parent"]:
+            p = ET.SubElement(level, "parent")
+            assert try_ref(etree, p, level_r["parent"])
+
+        chds = ET.SubElement(level, "children")
+        for e_r in dbhelper.select("taxonomy_category", where="parent='%s'" % level_r["uuid"]):
+            make_taxonomy_level(etree, chds, e_r)
+        make_prop(level, level_r, "weight")
+        make_prop(level, level_r, "rank")
+
+
 def main():
     root = ET.Element("client")
     etree = ET.ElementTree(root)
@@ -215,6 +234,20 @@ def main():
         make_portfolio(etree, portfolios, acc_r["uuid"])
 
     plans = ET.SubElement(root, "plans")
+
+
+    taxonomies = ET.SubElement(root, "taxonomies")
+    for taxon_r in dbhelper.select("taxonomy"):
+        taxon = ET.SubElement(taxonomies, "taxonomy")
+        make_prop(taxon, taxon_r, "id", "uuid")
+        make_prop(taxon, taxon_r, "name")
+        taxon_dim_rows =  dbhelper.select("taxonomy_data", where="taxonomy='%s' AND category IS NULL AND name='dimension'" % taxon_r["uuid"])
+        if taxon_dim_rows:
+            el = ET.SubElement(taxon, "dimensions")
+            for taxon_dim_r in taxon_dim_rows:
+                ET.SubElement(el, "string").text = taxon_dim_r["value"]
+        e_r = dbhelper.select("taxonomy_category", where="uuid='%s'" % taxon_r["root"])[0]
+        make_taxonomy_level(etree, taxon, e_r)
 
 
     ET.indent(root)

@@ -232,6 +232,17 @@ class PortfolioPerformanceXML2DB:
             fields = self.parse_props(attr_type_el, props)
             dbhelper.insert("attribute_type", fields, or_replace=True)
 
+        for config_set_el in self.etree.findall("settings/configurationSets/entry"):
+            props = ["string"]
+            fields = self.parse_props(config_set_el, props)
+            ren(fields, "string", "name")
+            cset_id = dbhelper.insert("config_set", fields, or_replace=True)
+            for config_e_el in config_set_el.findall("config-set/configurations/config"):
+                props = ["uuid", "name", "data"]
+                fields = self.parse_props(config_e_el, props)
+                fields["config_set"] = cset_id
+                dbhelper.insert("config_entry", fields, or_replace=True)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

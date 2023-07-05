@@ -1,0 +1,6 @@
+CREATE TABLE bookmark(
+_id INTEGER NOT NULL,
+label VARCHAR(64) NOT NULL,
+pattern VARCHAR(256) NOT NULL,
+PRIMARY KEY(_id)
+);

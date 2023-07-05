@@ -222,6 +222,11 @@ class PortfolioPerformanceXML2DB:
             dbhelper.insert("taxonomy", fields, or_replace=True)
             self.handle_taxonomy_level(fields["uuid"], None, root_el)
 
+        for bmark_el in self.etree.findall("settings/bookmarks/bookmark"):
+            props = ["label", "pattern"]
+            fields = self.parse_props(bmark_el, props)
+            dbhelper.insert("bookmark", fields, or_replace=True)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

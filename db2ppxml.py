@@ -266,6 +266,14 @@ def main():
         e_r = dbhelper.select("taxonomy_category", where="uuid='%s'" % taxon_r["root"])[0]
         make_taxonomy_level(etree, taxon, e_r)
 
+    settings = ET.SubElement(root, "settings")
+
+    bookmarks = ET.SubElement(settings, "bookmarks")
+    for bmark_r in dbhelper.select("bookmark"):
+        bmark = ET.SubElement(bookmarks, "bookmark")
+        make_prop(bmark, bmark_r, "label")
+        make_prop(bmark, bmark_r, "pattern")
+
 
     ET.indent(root)
     ET.dump(root)

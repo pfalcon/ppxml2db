@@ -285,6 +285,18 @@ def main():
         make_prop(attr_type, attr_type_r, "type")
         make_prop(attr_type, attr_type_r, "converterClass")
 
+    config_sets = ET.SubElement(settings, "configurationSets")
+    for cset_r in dbhelper.select("config_set"):
+        el = ET.SubElement(config_sets, "entry")
+        make_prop(el, cset_r, "string", "name")
+        el = ET.SubElement(el, "config-set")
+        el = ET.SubElement(el, "configurations")
+        for centry_r in dbhelper.select("config_entry", where="config_set=%d" % cset_r["_id"]):
+            centry = ET.SubElement(el, "config")
+            make_prop(centry, centry_r, "uuid")
+            make_prop(centry, centry_r, "name")
+            make_prop(centry, centry_r, "data")
+
 
     ET.indent(root)
     ET.dump(root)

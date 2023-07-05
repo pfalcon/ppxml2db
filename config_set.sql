@@ -1,0 +1,5 @@
+CREATE TABLE config_set(
+_id INTEGER NOT NULL,
+name VARCHAR(64) NOT NULL,
+PRIMARY KEY(_id)
+);

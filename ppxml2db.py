@@ -227,6 +227,11 @@ class PortfolioPerformanceXML2DB:
             fields = self.parse_props(bmark_el, props)
             dbhelper.insert("bookmark", fields, or_replace=True)
 
+        for attr_type_el in self.etree.findall("settings/attributeTypes/attribute-type"):
+            props = ["id", "name", "columnLabel", "source", "target", "type", "converterClass"]
+            fields = self.parse_props(attr_type_el, props)
+            dbhelper.insert("attribute_type", fields, or_replace=True)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

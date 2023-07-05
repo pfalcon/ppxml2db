@@ -274,6 +274,17 @@ def main():
         make_prop(bmark, bmark_r, "label")
         make_prop(bmark, bmark_r, "pattern")
 
+    attrtypes = ET.SubElement(settings, "attributeTypes")
+    for attr_type_r in dbhelper.select("attribute_type"):
+        attr_type = ET.SubElement(attrtypes, "attribute-type")
+        make_prop(attr_type, attr_type_r, "id")
+        make_prop(attr_type, attr_type_r, "name")
+        make_prop(attr_type, attr_type_r, "columnLabel")
+        make_prop(attr_type, attr_type_r, "source")
+        make_prop(attr_type, attr_type_r, "target")
+        make_prop(attr_type, attr_type_r, "type")
+        make_prop(attr_type, attr_type_r, "converterClass")
+
 
     ET.indent(root)
     ET.dump(root)

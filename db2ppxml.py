@@ -1,5 +1,6 @@
 import sys
 import os.path
+import json
 
 import lxml.etree as ET
 
@@ -28,6 +29,18 @@ def make_map(pel, rows):
         enel = ET.SubElement(mapel, "entry")
         ET.SubElement(enel, "string").text = r["attr_uuid"]
         ET.SubElement(enel, r["type"]).text = r["value"]
+
+
+def make_entry(pel, k, v):
+    e = ET.SubElement(pel, "entry")
+    ET.SubElement(e, "string").text = k
+    ET.SubElement(e, "string").text = v
+
+
+def make_configuration(pel, conf):
+    conf_el = ET.SubElement(pel, "configuration")
+    for k, v in conf.items():
+        make_entry(conf_el, k, v)
 
 
 def security_ref(uuid, levels=4):
@@ -265,6 +278,25 @@ def main():
                 ET.SubElement(el, "string").text = taxon_dim_r["value"]
         e_r = dbhelper.select("taxonomy_category", where="uuid='%s'" % taxon_r["root"])[0]
         make_taxonomy_level(etree, taxon, e_r)
+
+
+    dashboards = ET.SubElement(root, "dashboards")
+    for dashb_r in dbhelper.select("dashboard"):
+        dashb = ET.SubElement(dashboards, "dashboard")
+        dashb.set("name", dashb_r["name"])
+        make_configuration(dashb, json.loads(dashb_r["config_json"]))
+        columns = ET.SubElement(dashb, "columns")
+        for col_j in json.loads(dashb_r["columns_json"]):
+            col = ET.SubElement(columns, "column")
+            make_prop(col, col_j, "weight")
+            widgets = ET.SubElement(col, "widgets")
+            for wid_j in col_j["widgets"]:
+                wid = ET.SubElement(widgets, "widget")
+                wid.set("type", wid_j["type"])
+                make_prop(wid, wid_j, "label")
+                if "config" in wid_j:
+                    make_configuration(wid, wid_j["config"])
+
 
     settings = ET.SubElement(root, "settings")
 

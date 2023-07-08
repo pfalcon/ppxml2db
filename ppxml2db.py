@@ -1,6 +1,7 @@
 import sys
 import logging
 from pprint import pprint
+import json
 
 import lxml.etree as ET
 
@@ -43,6 +44,15 @@ class PortfolioPerformanceXML2DB:
         els = entry_el.findall("*")
         assert len(els) == 2, len(els)
         return [(e.tag, e.text) for e in els]
+
+    def parse_configuration(self, pel):
+        conf = {}
+        for c_el in pel.findall("configuration/entry"):
+            d = self.parse_entry(c_el)
+            assert d[0][0] == "string"
+            assert d[1][0] == "string"
+            conf[d[0][1]] = d[1][1]
+        return conf
 
     def handle_security(self, el):
         props = [
@@ -221,6 +231,27 @@ class PortfolioPerformanceXML2DB:
             fields["root"] = self.uuid(root_el)
             dbhelper.insert("taxonomy", fields, or_replace=True)
             self.handle_taxonomy_level(fields["uuid"], None, root_el)
+
+        for dashb_el in self.etree.findall("dashboards/dashboard"):
+            fields = {"name": dashb_el.get("name")}
+            conf = self.parse_configuration(dashb_el)
+            fields["config_json"] = json.dumps(conf)
+
+            columns = []
+            for col_el in dashb_el.findall("columns/column"):
+                props = ["weight"]
+                col_fields = self.parse_props(col_el, props)
+                col_fields["widgets"] = []
+                for widget_el in col_el.findall("widgets/widget"):
+                    wid_fields = self.parse_props(widget_el, ["label"])
+                    wid_fields["type"] = widget_el.get("type")
+                    if widget_el.find("configuration") is not None:
+                        conf = self.parse_configuration(widget_el)
+                        wid_fields["config"] = conf
+                    col_fields["widgets"].append(wid_fields)
+                columns.append(col_fields)
+            fields["columns_json"] = json.dumps(columns)
+            dbhelper.insert("dashboard", fields, or_replace=True)
 
         for bmark_el in self.etree.findall("settings/bookmarks/bookmark"):
             props = ["label", "pattern"]

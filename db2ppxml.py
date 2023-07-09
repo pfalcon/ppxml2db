@@ -298,6 +298,10 @@ def main():
                     make_configuration(wid, wid_j["config"])
 
 
+    properties = ET.SubElement(root, "properties")
+    for prop_r in dbhelper.select("property"):
+        make_entry(properties, prop_r["name"], prop_r["value"])
+
     settings = ET.SubElement(root, "settings")
 
     bookmarks = ET.SubElement(settings, "bookmarks")

@@ -253,6 +253,13 @@ class PortfolioPerformanceXML2DB:
             fields["columns_json"] = json.dumps(columns)
             dbhelper.insert("dashboard", fields, or_replace=True)
 
+        for prop_el in self.etree.findall("properties/entry"):
+            d = self.parse_entry(prop_el)
+            assert d[0][0] == "string"
+            assert d[1][0] == "string"
+            fields = {"name": d[0][1], "value": d[1][1]}
+            dbhelper.insert("property", fields, or_replace=True)
+
         for bmark_el in self.etree.findall("settings/bookmarks/bookmark"):
             props = ["label", "pattern"]
             fields = self.parse_props(bmark_el, props)

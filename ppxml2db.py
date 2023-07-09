@@ -21,8 +21,8 @@ class PortfolioPerformanceXML2DB:
         for p in props:
             pel = el.find(p)
             if pel is not None:
-                d[p] = pel.text
-            else:
+                d[p] = "" if pel.text is None else pel.text
+            elif p in el.attrib:
                 # Otherwise try attribute (will return None if not there)
                 d[p] = el.get(p)
         return d

@@ -5,6 +5,7 @@ TABLES = .account .security .security_attr .security_prop .latest_price .price \
     .xact .xact_unit .xact_cross_entry \
     .taxonomy .taxonomy_category .taxonomy_assignment .taxonomy_data \
     .dashboard \
+    .property \
     .bookmark .attribute_type .config_set .config_entry
 
 

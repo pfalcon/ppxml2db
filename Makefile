@@ -1,6 +1,7 @@
 PYTHON = python3
 DB = pp.db
-TABLES = .account .security .security_attr .security_prop .latest_price .price \
+TABLES = .account .account_attr \
+    .security .security_attr .security_prop .latest_price .price \
     .watchlist .watchlist_security \
     .xact .xact_unit .xact_cross_entry \
     .taxonomy .taxonomy_category .taxonomy_assignment .taxonomy_data \

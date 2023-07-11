@@ -186,6 +186,11 @@ class PortfolioPerformanceXML2DB:
     def __init__ (self, etree):
         self.etree = etree
 
+        props = ["version", "baseCurrency"]
+        fields = self.parse_props(self.etree, props)
+        for n in props:
+            dbhelper.insert("property", {"name": n, "value": fields[n], "special": 1}, or_replace=True)
+
         security_els = self.etree.findall("securities/security")
         for s in security_els:
             self.handle_security(s)

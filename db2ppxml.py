@@ -31,6 +31,11 @@ def make_map(pel, rows):
         ET.SubElement(enel, r["type"]).text = r["value"]
 
 
+def make_attributes(pel, rows):
+    attributes = ET.SubElement(pel, "attributes")
+    make_map(attributes, rows)
+
+
 def make_entry(pel, k, v):
     e = ET.SubElement(pel, "entry")
     ET.SubElement(e, "string").text = k
@@ -263,9 +268,8 @@ def main():
             make_prop(latest, latest_r, "low")
             make_prop(latest, latest_r, "volume")
 
-        attributes = ET.SubElement(sec, "attributes")
         attr_rows = dbhelper.select("security_attr", where="security='%s'" % sec_r["uuid"], order="seq")
-        make_map(attributes, attr_rows)
+        make_attributes(sec, attr_rows)
 
         events = ET.SubElement(sec, "events")
 

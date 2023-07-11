@@ -196,8 +196,10 @@ def make_taxonomy_level(etree, pel, level_r):
 def main():
     root = ET.Element("client")
     etree = ET.ElementTree(root)
-    ET.SubElement(root, "version").text = "56"
-    ET.SubElement(root, "baseCurrency").text = "USD"
+    for n in ["version", "baseCurrency"]:
+        row = dbhelper.select("property", where="name='%s'" % n)[0]
+        ET.SubElement(root, n).text = row["value"]
+
     securities = ET.SubElement(root, "securities")
 
     for i, sec_r in enumerate(dbhelper.select("security")):
@@ -299,7 +301,7 @@ def main():
 
 
     properties = ET.SubElement(root, "properties")
-    for prop_r in dbhelper.select("property"):
+    for prop_r in dbhelper.select("property", where="special=0"):
         make_entry(properties, prop_r["name"], prop_r["value"])
 
     settings = ET.SubElement(root, "settings")

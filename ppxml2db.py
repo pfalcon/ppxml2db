@@ -107,11 +107,17 @@ class PortfolioPerformanceXML2DB:
             }
             dbhelper.insert("security_prop", fields, or_replace=True)
 
+    def handle_account_attrs(self, pel, uuid):
+        for fields in self.parse_attributes(pel):
+            fields["account"] = uuid
+            dbhelper.insert("account_attr", fields, or_replace=True)
+
     def handle_account(self, el):
         props = ["uuid", "name", "currencyCode", "isRetired", "updatedAt"]
         fields = self.parse_props(el, props)
         fields["type"] = "account"
         dbhelper.insert("account", fields, or_replace=True)
+        self.handle_account_attrs(el, fields["uuid"])
 
     def handle_portfolio(self, el):
         el = self.resolve(el)
@@ -121,6 +127,7 @@ class PortfolioPerformanceXML2DB:
         fields["referenceAccount"] = self.uuid(acc)
         fields["type"] = "portfolio"
         dbhelper.insert("account", fields, or_replace=True)
+        self.handle_account_attrs(el, fields["uuid"])
 
     def handle_watchlist(self, el):
         fields = self.parse_props(el, ["name"])

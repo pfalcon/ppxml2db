@@ -157,6 +157,36 @@ def make_account(etree, pel, acc_r):
         make_prop(acc, acc_r, "updatedAt")
 
 
+def quote_text(s):
+    pats = (
+        ("&", "&amp;"),
+        ("<", "&lt;"),
+        (">", "&gt;"),
+        ('"', "&quot;"),
+        ("'", "&apos;"),
+    )
+    for p, r in pats:
+        s = s.replace(p, r)
+    return s
+
+
+def custom_dump(el, stream):
+    stream.write("<%s" % el.tag)
+    for k, v in el.attrib.items():
+        stream.write(' %s="%s"' % (k, v))
+    if el.text is None and not len(el):
+        stream.write("/>")
+    else:
+        stream.write(">")
+        if el.text:
+            stream.write(quote_text(el.text))
+        for ch in el:
+            custom_dump(ch, stream)
+        stream.write("</%s>" % el.tag)
+    if el.tail:
+        stream.write(el.tail)
+
+
 def make_taxonomy_level(etree, pel, level_r):
         tag = "root" if level_r["parent"] is None else "classification"
         level = ET.SubElement(pel, tag)
@@ -337,8 +367,8 @@ def main():
 
 
     ET.indent(root)
-    ET.dump(root)
-    #root.write(sys.stdout)
+    #ET.dump(root)
+    custom_dump(root, sys.stdout)
 
 
 if __name__ == "__main__":

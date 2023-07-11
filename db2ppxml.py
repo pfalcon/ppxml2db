@@ -145,6 +145,9 @@ def make_portfolio(etree, pel, uuid):
         xacts = ET.SubElement(el, "transactions")
         make_xacts(etree, xacts, port_r["uuid"])
 
+        attr_rows = dbhelper.select("account_attr", where="account='%s'" % port_r["uuid"], order="seq")
+        make_attributes(el, attr_rows)
+
         make_prop(el, port_r, "updatedAt")
 
 
@@ -158,6 +161,9 @@ def make_account(etree, pel, acc_r):
 
         xacts = ET.SubElement(acc, "transactions")
         make_xacts(etree, xacts, acc_r["uuid"])
+
+        attr_rows = dbhelper.select("account_attr", where="account='%s'" % acc_r["uuid"], order="seq")
+        make_attributes(acc, attr_rows)
 
         make_prop(acc, acc_r, "updatedAt")
 

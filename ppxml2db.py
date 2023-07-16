@@ -60,10 +60,15 @@ class PortfolioPerformanceXML2DB:
             els = attr_el.findall("*")
             assert len(els) == 2
             assert els[0].tag == "string"
+            if els[1].tag == "limitPrice":
+                fields = self.parse_props(els[1], ("operator", "value"))
+                value = "%s %s" % (fields["operator"], fields["value"])
+            else:
+                value = els[1].text
             fields = {
                 "attr_uuid": els[0].text,
                 "type": els[1].tag,
-                "value": els[1].text,
+                "value": value,
                 "seq": seq,
             }
             yield fields

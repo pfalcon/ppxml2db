@@ -7,5 +7,6 @@ source VARCHAR(128),
 target VARCHAR(128) NOT NULL,
 type VARCHAR(128) NOT NULL,
 converterClass VARCHAR(128) NOT NULL,
+props_json TEXT,
 PRIMARY KEY(_id)
 );

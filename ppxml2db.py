@@ -99,6 +99,12 @@ class PortfolioPerformanceXML2DB:
             fields["security"] = sec["uuid"]
             dbhelper.insert("security_attr", fields, or_replace=True)
 
+        for event_el in el.findall("events/event"):
+            props = ["date", "type", "details"]
+            fields = self.parse_props(event_el, props)
+            fields["security"] = sec["uuid"]
+            dbhelper.insert("security_event", fields)
+
         prop_els = el.findall("property")
         for seq, prop_el in enumerate(prop_els):
             fields = {

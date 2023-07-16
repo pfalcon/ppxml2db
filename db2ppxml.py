@@ -278,6 +278,11 @@ def main():
         make_attributes(sec, attr_rows)
 
         events = ET.SubElement(sec, "events")
+        for event_r in dbhelper.select("security_event", where="security='%s'" % sec_r["uuid"]):
+            event = ET.SubElement(events, "event")
+            make_prop(event, event_r, "date")
+            make_prop(event, event_r, "type")
+            make_prop(event, event_r, "details")
 
         for prop_r in dbhelper.select("security_prop", where="security='%s'" % sec_r["uuid"], order="seq"):
             p = ET.SubElement(sec, "property")

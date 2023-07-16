@@ -54,8 +54,8 @@ class PortfolioPerformanceXML2DB:
             conf[d[0][1]] = d[1][1] if d[1][1] is not None else ""
         return conf
 
-    def parse_attributes(self, pel):
-        attr_els = pel.findall("attributes/map/entry")
+    def parse_attributes(self, pel, el_tag="attributes/map"):
+        attr_els = pel.findall(el_tag + "/entry")
         for seq, attr_el in enumerate(attr_els):
             els = attr_el.findall("*")
             assert len(els) == 2
@@ -298,6 +298,10 @@ class PortfolioPerformanceXML2DB:
         for attr_type_el in self.etree.findall("settings/attributeTypes/attribute-type"):
             props = ["id", "name", "columnLabel", "source", "target", "type", "converterClass"]
             fields = self.parse_props(attr_type_el, props)
+            props = []
+            for p in self.parse_attributes(attr_type_el, "properties"):
+                props.append({"name": p["attr_uuid"], "type": p["type"], "value": p["value"]})
+            fields["props_json"] = json.dumps(props)
             dbhelper.insert("attribute_type", fields, or_replace=True)
 
         for config_set_el in self.etree.findall("settings/configurationSets/entry"):

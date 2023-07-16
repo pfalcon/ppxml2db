@@ -28,7 +28,13 @@ def make_map(pel, rows):
     for r in rows:
         enel = ET.SubElement(mapel, "entry")
         ET.SubElement(enel, "string").text = r["attr_uuid"]
-        ET.SubElement(enel, r["type"]).text = r["value"]
+        if r["type"] == "limitPrice":
+            el = ET.SubElement(enel, r["type"])
+            op, val = r["value"].split(" ", 1)
+            ET.SubElement(el, "operator").text = op
+            ET.SubElement(el, "value").text = val
+        else:
+            ET.SubElement(enel, r["type"]).text = r["value"]
 
 
 def make_attributes(pel, rows):

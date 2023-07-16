@@ -51,7 +51,7 @@ class PortfolioPerformanceXML2DB:
             d = self.parse_entry(c_el)
             assert d[0][0] == "string"
             assert d[1][0] == "string"
-            conf[d[0][1]] = d[1][1]
+            conf[d[0][1]] = d[1][1] if d[1][1] is not None else ""
         return conf
 
     def parse_attributes(self, pel):

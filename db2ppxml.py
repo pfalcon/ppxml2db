@@ -42,10 +42,10 @@ def make_attributes(pel, rows):
     make_map(attributes, rows)
 
 
-def make_entry(pel, k, v):
+def make_entry(pel, k, v, type="string"):
     e = ET.SubElement(pel, "entry")
     ET.SubElement(e, "string").text = k
-    ET.SubElement(e, "string").text = v
+    ET.SubElement(e, type).text = v
 
 
 def make_configuration(pel, conf):
@@ -373,6 +373,11 @@ def main():
         make_prop(attr_type, attr_type_r, "target")
         make_prop(attr_type, attr_type_r, "type")
         make_prop(attr_type, attr_type_r, "converterClass")
+        prop_list = json.loads(attr_type_r["props_json"])
+        if prop_list:
+            props = ET.SubElement(attr_type, "properties")
+            for p in prop_list:
+                make_entry(props, p["name"], p["value"], type=p["type"])
 
     config_sets = ET.SubElement(settings, "configurationSets")
     for cset_r in dbhelper.select("config_set"):

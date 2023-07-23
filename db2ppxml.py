@@ -264,12 +264,16 @@ def main():
         make_prop(sec, sec_r, "wkn")
         make_prop(sec, sec_r, "feedTickerSymbol")
         make_prop(sec, sec_r, "feed")
+        make_prop(sec, sec_r, "feedURL")
 
         prices = ET.SubElement(sec, "prices")
         for price_r in dbhelper.select("price", where="security='%s'" % sec_r["uuid"]):
             p = ET.SubElement(prices, "price")
             p.set("t", price_r["tstamp"])
             p.set("v", str(price_r["value"]))
+
+        make_prop(sec, sec_r, "latestFeed")
+        make_prop(sec, sec_r, "latestFeedURL")
 
         # Can be 0 or 1
         for latest_r in dbhelper.select("latest_price", where="security='%s'" % sec_r["uuid"]):

@@ -1,4 +1,5 @@
 import sys
+import argparse
 import logging
 from pprint import pprint
 import json
@@ -318,9 +319,18 @@ class PortfolioPerformanceXML2DB:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    argp = argparse.ArgumentParser(description="Import PortfolioPerformance XML file to Sqlite DB")
+    argp.add_argument("xml_file", help="input XML file")
+    argp.add_argument("db_file", help="output DB file")
+    argp.add_argument("--debug", action="store_true", help="enable debug logging")
+    argp.add_argument("--dry-run", action="store_true", help="don't commit changes to DB")
+    args = argp.parse_args()
 
-    dbhelper.init(sys.argv[2])
-    root = ET.parse(sys.argv[1])
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    dbhelper.init(args.db_file)
+    root = ET.parse(args.xml_file)
     conv = PortfolioPerformanceXML2DB(root)
-    dbhelper.commit()
+    if not args.dry_run:
+        dbhelper.commit()

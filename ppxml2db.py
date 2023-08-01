@@ -77,7 +77,7 @@ class PortfolioPerformanceXML2DB:
     def handle_security(self, el):
         props = [
             "uuid", "onlineId", "name", "currencyCode", "note",
-            "isin", "tickerSymbol", "wkn", "feedTickerSymbol",
+            "isin", "tickerSymbol", "calendar", "wkn", "feedTickerSymbol",
             "feed", "feedURL", "latestFeed", "latestFeedURL",
             "isRetired", "updatedAt"
         ]

@@ -261,6 +261,7 @@ def main():
         make_prop(sec, sec_r, "note")
         make_prop(sec, sec_r, "isin")
         make_prop(sec, sec_r, "tickerSymbol")
+        make_prop(sec, sec_r, "calendar")
         make_prop(sec, sec_r, "wkn")
         make_prop(sec, sec_r, "feedTickerSymbol")
         make_prop(sec, sec_r, "feed")

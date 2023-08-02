@@ -1,4 +1,6 @@
 import sys
+import argparse
+import logging
 import os.path
 import json
 
@@ -403,5 +405,13 @@ def main():
 
 
 if __name__ == "__main__":
-    dbhelper.init(sys.argv[1])
+    argp = argparse.ArgumentParser(description="Export Sqlite DB to PortfolioPerformance XML file")
+    argp.add_argument("db_file", help="output DB file")
+    argp.add_argument("--debug", action="store_true", help="enable debug logging")
+    args = argp.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    dbhelper.init(args.db_file)
     main()

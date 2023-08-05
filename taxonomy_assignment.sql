@@ -1,4 +1,7 @@
 CREATE TABLE taxonomy_assignment(
+-- redundant from DB normal form point of view, but helpful for actual
+-- operations on particilar item and taxonomy.
+taxonomy VARCHAR(36) NOT NULL REFERENCES taxonomy(uuid),
 category VARCHAR(36) NOT NULL REFERENCES taxonomy_category(uuid),
 item_type VARCHAR(32) NOT NULL,
 -- Can refer to different things, e.g. security, account, etc., so we don't

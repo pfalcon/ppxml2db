@@ -198,6 +198,7 @@ class PortfolioPerformanceXML2DB:
             fields["item_type"] = el.get("class")
             fields["item"] = self.uuid(el)
             fields["category"] = level_uuid
+            fields["taxonomy"] = taxon_uuid
             dbhelper.insert("taxonomy_assignment", fields, or_replace=True)
 
         for ch_el in level_el.findall("children/classification"):

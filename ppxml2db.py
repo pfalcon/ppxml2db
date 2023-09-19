@@ -126,6 +126,7 @@ class PortfolioPerformanceXML2DB:
             dbhelper.insert("account_attr", fields, or_replace=True)
 
     def handle_account(self, el):
+        el = self.resolve(el)
         props = ["uuid", "name", "currencyCode", "isRetired", "updatedAt"]
         fields = self.parse_props(el, props)
         fields["type"] = "account"

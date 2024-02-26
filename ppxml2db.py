@@ -241,13 +241,26 @@ class PortfolioPerformanceXML2DB:
         for x_el in self.etree.findall("//crossEntry"):
             if x_el.get("reference") is not None:
                 continue
-            fields = {
-                "type": x_el.get("class"),
-                "portfolio": self.uuid(x_el.find("portfolio")),
-                "portfolio_xact": self.uuid(x_el.find("portfolioTransaction")),
-                "account": self.uuid(x_el.find("account")),
-                "account_xact": self.uuid(x_el.find("accountTransaction")),
-            }
+            typ = x_el.get("class")
+            if typ == "buysell":
+                fields = {
+                    "type": typ,
+                    "portfolio": self.uuid(x_el.find("portfolio")),
+                    "portfolio_xact": self.uuid(x_el.find("portfolioTransaction")),
+                    "account": self.uuid(x_el.find("account")),
+                    "account_xact": self.uuid(x_el.find("accountTransaction")),
+                }
+            elif typ == "account-transfer":
+                raise NotImplementedError
+                fields = {
+                    "type": typ,
+                    "accountFrom": self.uuid(x_el.find("accountFrom")),
+                    "accountFrom_xact": self.uuid(x_el.find("transactionFrom")),
+                    "account": self.uuid(x_el.find("accountTo")),
+                    "account_xact": self.uuid(x_el.find("transactionTo")),
+                }
+            else:
+                raise NotImplementedError
             dbhelper.insert("xact_cross_entry", fields, or_replace=True)
 
         for taxon_el in self.etree.findall("taxonomies/taxonomy"):

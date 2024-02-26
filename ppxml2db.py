@@ -4,6 +4,7 @@ import logging
 from pprint import pprint
 import json
 import logging
+import os.path
 
 import lxml.etree as ET
 
@@ -39,7 +40,8 @@ class PortfolioPerformanceXML2DB:
     def resolve(self, el):
         ref = el.get("reference")
         if ref is not None:
-            el = self.etree.find(self.etree.getelementpath(el) + "/" + ref)
+            norm = os.path.normpath(self.etree.getelementpath(el) + "/" + ref)
+            el = self.etree.find(norm)
         return el
 
     def uuid(self, el):

@@ -41,7 +41,10 @@ class PortfolioPerformanceXML2DB:
         ref = el.get("reference")
         if ref is not None:
             norm = os.path.normpath(self.etree.getelementpath(el) + "/" + ref)
-            el = self.etree.find(norm)
+            el = self.refcache.get(norm)
+            if el is None:
+                el = self.etree.find(norm)
+                self.refcache[norm] = el
         return el
 
     def uuid(self, el):
@@ -217,6 +220,7 @@ class PortfolioPerformanceXML2DB:
 
     def __init__ (self, etree):
         self.etree = etree
+        self.refcache = {}
 
         props = ["version", "baseCurrency"]
         fields = self.parse_props(self.etree, props)

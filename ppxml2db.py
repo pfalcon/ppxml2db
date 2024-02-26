@@ -3,11 +3,19 @@ import argparse
 import logging
 from pprint import pprint
 import json
+import logging
 
 import lxml.etree as ET
 
 import dbhelper
 
+
+_log = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-5s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
 
 # Rename field in a dictionary
 def ren(d, old, new):
@@ -213,31 +221,38 @@ class PortfolioPerformanceXML2DB:
         for n in props:
             dbhelper.insert("property", {"name": n, "value": fields[n], "special": 1}, or_replace=True)
 
+        _log.info("Handling <security>")
         security_els = self.etree.findall("securities/security")
         for s in security_els:
             self.handle_security(s)
 
+        _log.info("Handling <watchlist>")
         for w in self.etree.findall("watchlists/watchlist"):
             self.handle_watchlist(w)
 
+        _log.info("Handling <account>")
         account_els = self.etree.findall("accounts/account")
         for el in account_els:
             self.handle_account(el)
 
+        _log.info("Handling <portfolio>")
         portfolio_els = self.etree.findall("portfolios/portfolio")
         for el in portfolio_els:
             self.handle_portfolio(el)
 
+        _log.info("Handling <account-transaction>")
         for acc_el in self.etree.findall("accounts/account"):
             acc_uuid = self.uuid(acc_el)
             for xact_el in acc_el.findall(".//account-transaction"):
                 self.handle_xact("account", acc_uuid, xact_el)
 
+        _log.info("Handling <portfolio-transaction>")
         for acc_el in self.etree.findall(".//portfolio"):
             acc_uuid = self.uuid(acc_el)
             for xact_el in acc_el.findall(".//portfolio-transaction"):
                 self.handle_xact("portfolio", acc_uuid, xact_el)
 
+        _log.info("Handling <crossEntry>")
         for x_el in self.etree.findall("//crossEntry"):
             if x_el.get("reference") is not None:
                 continue
@@ -263,6 +278,7 @@ class PortfolioPerformanceXML2DB:
                 raise NotImplementedError
             dbhelper.insert("xact_cross_entry", fields, or_replace=True)
 
+        _log.info("Handling <taxonomy>")
         for taxon_el in self.etree.findall("taxonomies/taxonomy"):
             props = ["id", "name"]
             fields = self.parse_props(taxon_el, props)
@@ -279,6 +295,7 @@ class PortfolioPerformanceXML2DB:
             dbhelper.insert("taxonomy", fields, or_replace=True)
             self.handle_taxonomy_level(fields["uuid"], None, root_el)
 
+        _log.info("Handling <dashboard>")
         for dashb_el in self.etree.findall("dashboards/dashboard"):
             fields = {"name": dashb_el.get("name")}
             conf = self.parse_configuration(dashb_el)
@@ -300,6 +317,7 @@ class PortfolioPerformanceXML2DB:
             fields["columns_json"] = json.dumps(columns)
             dbhelper.insert("dashboard", fields, or_replace=True)
 
+        _log.info("Handling <properties>")
         for prop_el in self.etree.findall("properties/entry"):
             d = self.parse_entry(prop_el)
             assert d[0][0] == "string"
@@ -307,6 +325,7 @@ class PortfolioPerformanceXML2DB:
             fields = {"name": d[0][1], "value": d[1][1]}
             dbhelper.insert("property", fields, or_replace=True)
 
+        _log.info("Handling <settings>")
         for bmark_el in self.etree.findall("settings/bookmarks/bookmark"):
             props = ["label", "pattern"]
             fields = self.parse_props(bmark_el, props)

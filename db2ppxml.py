@@ -19,10 +19,14 @@ output_els = {}
 cross_els = {}
 
 
-def make_prop(pel, row, prop, row_prop=None):
+def as_bool(v):
+    return ["false", "true"][v]
+
+
+def make_prop(pel, row, prop, row_prop=None, conv=str):
     if row[row_prop or prop] is not None:
         el = ET.SubElement(pel, prop)
-        el.text = str(row[row_prop or prop])
+        el.text = conv(row[row_prop or prop])
 
 
 def make_map(pel, rows):
@@ -146,7 +150,7 @@ def make_portfolio(etree, pel, uuid):
         port_r = dbhelper.select("account", where="uuid='%s'" % uuid)[0]
         make_prop(el, port_r, "uuid")
         make_prop(el, port_r, "name")
-        make_prop(el, port_r, "isRetired")
+        make_prop(el, port_r, "isRetired", conv=as_bool)
         a = ET.SubElement(el, "referenceAccount")
         assert try_ref(etree, a, port_r["referenceAccount"])
 
@@ -165,7 +169,7 @@ def make_account(etree, pel, acc_r):
         make_prop(acc, acc_r, "uuid")
         make_prop(acc, acc_r, "name")
         make_prop(acc, acc_r, "currencyCode")
-        make_prop(acc, acc_r, "isRetired")
+        make_prop(acc, acc_r, "isRetired", conv=as_bool)
 
         xacts = ET.SubElement(acc, "transactions")
         make_xacts(etree, xacts, acc_r["uuid"])
@@ -303,7 +307,7 @@ def main():
             p.set("name", prop_r["name"])
             p.text = prop_r["value"]
 
-        make_prop(sec, sec_r, "isRetired")
+        make_prop(sec, sec_r, "isRetired", conv=as_bool)
         make_prop(sec, sec_r, "updatedAt")
 
     watchlists = ET.SubElement(root, "watchlists")

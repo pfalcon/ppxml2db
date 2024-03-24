@@ -24,6 +24,10 @@ def ren(d, old, new):
     del d[old]
 
 
+def as_bool(v):
+    return {"false": 0, "true": 1}[v]
+
+
 class PortfolioPerformanceXML2DB:
 
     def parse_props(self, el, props):
@@ -96,7 +100,7 @@ class PortfolioPerformanceXML2DB:
             "uuid", "onlineId", "name", "currencyCode", "note",
             "isin", "tickerSymbol", "calendar", "wkn", "feedTickerSymbol",
             "feed", "feedURL", "latestFeed", "latestFeedURL",
-            "isRetired", "updatedAt"
+            ("isRetired", as_bool), "updatedAt"
         ]
         sec = self.parse_props(el, props)
         dbhelper.insert("security", sec, or_replace=True)
@@ -144,7 +148,7 @@ class PortfolioPerformanceXML2DB:
 
     def handle_account(self, el):
         el = self.resolve(el)
-        props = ["uuid", "name", "currencyCode", "isRetired", "updatedAt"]
+        props = ["uuid", "name", "currencyCode", ("isRetired", as_bool), "updatedAt"]
         fields = self.parse_props(el, props)
         fields["type"] = "account"
         dbhelper.insert("account", fields, or_replace=True)
@@ -152,7 +156,7 @@ class PortfolioPerformanceXML2DB:
 
     def handle_portfolio(self, el):
         el = self.resolve(el)
-        props = ["uuid", "name", "isRetired", "updatedAt"]
+        props = ["uuid", "name", ("isRetired", as_bool), "updatedAt"]
         fields = self.parse_props(el, props)
         acc = self.resolve(el.find("referenceAccount"))
         fields["referenceAccount"] = self.uuid(acc)

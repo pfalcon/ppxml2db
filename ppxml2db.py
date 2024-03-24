@@ -29,12 +29,16 @@ class PortfolioPerformanceXML2DB:
     def parse_props(self, el, props):
         d = {}
         for p in props:
+            conv = lambda x: x
+            if isinstance(p, tuple):
+                conv = p[1]
+                p = p[0]
             pel = el.find(p)
             if pel is not None:
-                d[p] = "" if pel.text is None else pel.text
+                d[p] = conv("" if pel.text is None else pel.text)
             elif p in el.attrib:
                 # Otherwise try attribute (will return None if not there)
-                d[p] = el.get(p)
+                d[p] = conv(el.get(p))
         return d
 
     def resolve(self, el):

@@ -10,6 +10,8 @@ shares INT NOT NULL,
 note TEXT,
 updatedAt VARCHAR(64) NOT NULL,
 type VARCHAR(16) NOT NULL,
+fees INT NOT NULL DEFAULT 0,
+taxes INT NOT NULL DEFAULT 0,
 PRIMARY KEY(uuid)
 );
 CREATE INDEX xact__account ON xact(account);

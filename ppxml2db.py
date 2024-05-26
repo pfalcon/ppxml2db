@@ -1,6 +1,7 @@
 import sys
 import argparse
 import logging
+from collections import defaultdict
 from pprint import pprint
 import json
 import logging
@@ -174,6 +175,13 @@ class PortfolioPerformanceXML2DB:
 
     def handle_xact(self, acc_type, acc_uuid, el):
         el = self.resolve(el)
+
+        # Start with calculating unit aggregates, to add to xact row in DB.
+        units_dict = defaultdict(int)
+        for unit_el in el.findall("units/unit"):
+            am_el = unit_el.find("amount")
+            units_dict[unit_el.get("type")] += int(am_el.get("amount"))
+
         props = ["uuid", "date", "currencyCode", "amount", "shares", "note", "updatedAt", "type"]
         fields = self.parse_props(el, props)
         fields["account"] = acc_uuid
@@ -181,6 +189,8 @@ class PortfolioPerformanceXML2DB:
         sec = el.find("security")
         if sec is not None:
             fields["security"] = self.uuid(sec)
+        fields["fees"] = units_dict["FEE"]
+        fields["taxes"] = units_dict["TAX"]
         dbhelper.insert("xact", fields, or_replace=True)
 
         xact_uuid = fields["uuid"]

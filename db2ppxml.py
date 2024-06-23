@@ -101,23 +101,31 @@ def make_xact(etree, pel, tag, xact_r):
             else:
                 crit = "portfolio_xact='%s'"
             for x_r in dbhelper.select("xact_cross_entry", where=crit % xact_r["uuid"]):
-                #print(x_r)
+                #print(dict(x_r))
                 x = ET.SubElement(xact, "crossEntry")
                 x.set("class", x_r["type"])
-                cross_key = (x_r["portfolio_xact"], x_r["account_xact"])
+                cross_key = (x_r["type"], x_r["portfolio_xact"], x_r["account_xact"])
                 existing_x = cross_els.get(cross_key)
                 if existing_x is not None:
                     make_ref(etree, x, existing_x)
                     continue
                 cross_els[cross_key] = x
-                make_portfolio(etree, x, x_r["portfolio"])
-                rf = ET.SubElement(x, "portfolioTransaction")
-                assert try_ref(etree, rf, x_r["portfolio_xact"])
-                rf = ET.SubElement(x, "account")
-                assert try_ref(etree, rf, x_r["account"])
+                if x_r["type"] == "account-transfer":
+                    rf = ET.SubElement(x, "accountFrom")
+                    assert try_ref(etree, rf, x_r["accountFrom"])
+                    rf = ET.SubElement(x, "transactionFrom")
+                    assert try_ref(etree, rf, x_r["accountFrom_xact"])
+                    accto_r = dbhelper.select("account", where="uuid='%s'" % x_r["account"])[0]
+                    make_account(etree, x, accto_r, el_name="accountTo")
+                else:
+                    make_portfolio(etree, x, x_r["portfolio"])
+                    rf = ET.SubElement(x, "portfolioTransaction")
+                    assert try_ref(etree, rf, x_r["portfolio_xact"])
+                    rf = ET.SubElement(x, "account")
+                    try_ref(etree, rf, x_r["account"])
 
-                acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["account_xact"])[0]
-                make_xact(etree, x, "accountTransaction", acc_xact_r)
+                    acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["account_xact"])[0]
+                    make_xact(etree, x, "accountTransaction", acc_xact_r)
 
             make_prop(xact, xact_r, "shares")
             make_prop(xact, xact_r, "note")
@@ -152,7 +160,7 @@ def make_portfolio(etree, pel, uuid):
         make_prop(el, port_r, "name")
         make_prop(el, port_r, "isRetired", conv=as_bool)
         a = ET.SubElement(el, "referenceAccount")
-        assert try_ref(etree, a, port_r["referenceAccount"])
+        try_ref(etree, a, port_r["referenceAccount"])
 
         xacts = ET.SubElement(el, "transactions")
         make_xacts(etree, xacts, port_r["uuid"])
@@ -163,8 +171,8 @@ def make_portfolio(etree, pel, uuid):
         make_prop(el, port_r, "updatedAt")
 
 
-def make_account(etree, pel, acc_r):
-        acc = ET.SubElement(pel, "account")
+def make_account(etree, pel, acc_r, el_name="account"):
+        acc = ET.SubElement(pel, el_name)
         output_els[acc_r["uuid"]] = acc
         make_prop(acc, acc_r, "uuid")
         make_prop(acc, acc_r, "name")

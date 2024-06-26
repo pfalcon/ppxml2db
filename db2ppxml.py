@@ -71,6 +71,8 @@ def security_ref(uuid, levels=4):
 def make_ref(etree, el, to_el):
     rel_path = os.path.relpath(etree.getelementpath(to_el), etree.getelementpath(el))
     rel_path = rel_path.replace("[1]", "")
+    # Workaround for Windows.
+    rel_path = rel_path.replace("\\", "/")
     el.set("reference", rel_path)
 
 

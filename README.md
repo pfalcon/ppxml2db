@@ -13,8 +13,8 @@ format never was intended to be human readable, writable, easy to process
 by 3rd-party tools, or anything like.
 
 This project tries to ~~solve~~ address this problem, by providing Python
-scripts to parse this, effectively proprietary, XML format and storing
-data into an SQLite database, and performing reverse operation - exporting
+scripts to parse this, effectively proprietary, XML format, store the
+data into an SQLite database, and perform a reverse operation - export
 data from such an SQLite database back to the XML format, while achieving
 as perfect round-trip as possible (meaning that if you import data and
 immediately export, you will get almost no differences comparing to the

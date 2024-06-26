@@ -18,7 +18,7 @@ data into an SQLite database, and performing reverse operation - exporting
 data from such an SQLite database back to the XML format, while achieving
 as perfect round-trip as possible (meaning that if you import data and
 immediately export, you will get almost no differences comparing to the
-original XML file, and if you change something in the database, then in
+original XML file, and if you change some things in the database, then in
 general, only these changes will be propagated to XML file). Round-tripping
 is important, because it will allow you to review the changes made to the
 data in the database, and ensure they correspond with your expectations.
@@ -27,7 +27,7 @@ While developing 3rd-party tools is the primary usecase behind this project,
 it also tries to be a "proof of concept" of the idea of storing
 PortfolioPerformance data in the database. To that end, database schema
 is intended to match internal PP object schema pretty well. This means
-that while writing data manipulation scripts you may need to just
+that while writing data manipulation scripts you may need to jump
 thru some extra hops, but potentially opens a possibility to integrate
 database backend directly into PP (by making at least a first step -
 providing a realisitic database schema for that).
@@ -50,9 +50,9 @@ or next earnings date - possibilities are limitless.
 
 ## Example usage
 
-Not that using `Makefile` requires POSIX-like operating system
+Note that using `Makefile` requires POSIX-like operating system
 (e.g. Linux or Windows Subsystem for Linux) with the `make`
-tool. Main scripts are written in (Python3)[https://www.python.org].
+tool. Main scripts are written in [Python3](https://www.python.org).
 
 1. Start PortfolioPerformance. Make sure you see "Welcome" page.
 2. On the "Welcome" page, click "Open the DAX sample file".
@@ -64,7 +64,7 @@ tool. Main scripts are written in (Python3)[https://www.python.org].
 6. Import the XML into the database:
    `python3 ppxml2db.py dax.xml dax.db`
 7. Export the database to a new XML file:
-   `python3 python3 ppxml2db.py >dax.xml.out`
+   `python3 db2ppxml.py dax.db >dax.xml.out`
 8. Ensure that the new file matches the original character-by-character:
    `diff -u dax.xml dax.xml.out`
 

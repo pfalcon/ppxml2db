@@ -2,18 +2,29 @@ import logging
 import sqlite3
 
 
+LOG_SQL_TO_FILE = 0
+
+
 log = logging.getLogger(__name__)
 
 db = None
+
+sqllog = None
 
 
 def init(dbname):
     global db
     db = sqlite3.connect(dbname)
     db.row_factory = sqlite3.Row
+    if LOG_SQL_TO_FILE:
+        global sqllog
+        sqllog = open(dbname + ".sql", "w")
 
 
 def execute_insert(sql, values = ()):
+    if LOG_SQL_TO_FILE:
+        sqllog.write("%s %s\n" % (sql, values))
+        return
     cursor = db.cursor()
     log.debug(sql + " " + str(values))
     cursor.execute(sql, values)

@@ -388,7 +388,8 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     dbhelper.init(args.db_file)
-    root = ET.parse(args.xml_file)
+    with open(args.xml_file, encoding="utf-8") as f:
+        root = ET.parse(f)
     conv = PortfolioPerformanceXML2DB(root)
     if not args.dry_run:
         dbhelper.commit()

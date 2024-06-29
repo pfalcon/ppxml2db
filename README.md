@@ -64,7 +64,7 @@ tool. Main scripts are written in [Python3](https://www.python.org).
 6. Import the XML into the database:
    `python3 ppxml2db.py dax.xml dax.db`
 7. Export the database to a new XML file:
-   `python3 db2ppxml.py dax.db >dax.xml.out`
+   `python3 db2ppxml.py dax.db dax.xml.out`
 8. Ensure that the new file matches the original character-by-character:
    `diff -u dax.xml dax.xml.out`
 

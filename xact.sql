@@ -12,6 +12,8 @@ updatedAt VARCHAR(64) NOT NULL,
 type VARCHAR(16) NOT NULL,
 fees INT NOT NULL DEFAULT 0,
 taxes INT NOT NULL DEFAULT 0,
+_xmlid INT NOT NULL,
+_order INT NOT NULL,
 PRIMARY KEY(uuid)
 );
 CREATE INDEX xact__account ON xact(account);

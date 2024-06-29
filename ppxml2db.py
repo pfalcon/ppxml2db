@@ -14,11 +14,11 @@ import dbhelper
 
 
 _log = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)-5s %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-)
+#logging.basicConfig(
+#    level=logging.INFO,
+#    format='%(asctime)s %(levelname)-5s %(message)s',
+#    datefmt='%Y-%m-%d %H:%M:%S',
+#)
 
 # Rename field in a dictionary
 def ren(d, old, new):
@@ -29,6 +29,10 @@ def ren(d, old, new):
 
 def as_bool(v):
     return {"false": 0, "true": 1}[v]
+
+
+def dump_el(el):
+    print(ET.tostring(el).decode())
 
 
 class PortfolioPerformanceXML2DB:
@@ -48,24 +52,12 @@ class PortfolioPerformanceXML2DB:
                 d[p] = conv(el.get(p))
         return d
 
-    def resolve(self, el):
-        ref = el.get("reference")
-        if ref is not None:
-            norm = os.path.normpath(self.etree.getelementpath(el) + "/" + ref)
-            # Workaround for Windows.
-            norm = norm.replace("\\", "/")
-            el = self.refcache.get(norm)
-            if el is None:
-                el = self.etree.find(norm)
-                self.refcache[norm] = el
-        return el
-
     def uuid(self, el):
-        el = self.resolve(el)
-        id_el = el.find("uuid")
-        if id_el is None:
-            id_el = el.find("id")
-        return id_el.text
+        id = el.get("reference")
+        if id is None:
+            id = el.get("id")
+        assert id is not None
+        return self.id2uuid_map[id]
 
     def parse_entry(self, entry_el):
         els = entry_el.findall("*")
@@ -100,7 +92,33 @@ class PortfolioPerformanceXML2DB:
             }
             yield fields
 
+    def handle_price(self, price_el):
+            props = ["t", "v"]
+            price_fields = self.parse_props(price_el, props)
+            ren(price_fields, "v", "value")
+            ren(price_fields, "t", "tstamp")
+            price_fields["security"] = self.cur_uuid()
+            dbhelper.insert("price", price_fields, or_replace=True)
+
+    def handle_latest(self, latest_el):
+        if latest_el is not None:
+            props = ["t", "v", "high", "low", "volume"]
+            latest_fields = self.parse_props(latest_el, props)
+            ren(latest_fields, "v", "value")
+            ren(latest_fields, "t", "tstamp")
+            latest_fields["security"] = self.cur_uuid()
+            dbhelper.insert("latest_price", latest_fields, or_replace=True)
+
+    def handle_event(self, event_el):
+            props = ["date", "type", "details"]
+            fields = self.parse_props(event_el, props)
+            fields["security"] = self.cur_uuid()
+            dbhelper.insert("security_event", fields)
+
     def handle_security(self, el):
+        if el.get("reference") is not None:
+            return
+
         props = [
             "uuid", "onlineId", "name", "currencyCode", "note",
             "isin", "tickerSymbol", "calendar", "wkn", "feedTickerSymbol",
@@ -111,33 +129,9 @@ class PortfolioPerformanceXML2DB:
         ren(sec, "currencyCode", "currency")
         dbhelper.insert("security", sec, or_replace=True)
 
-        latest_el = el.find("latest")
-        if latest_el is not None:
-            props = ["t", "v", "high", "low", "volume"]
-            latest_fields = self.parse_props(latest_el, props)
-            ren(latest_fields, "v", "value")
-            ren(latest_fields, "t", "tstamp")
-            latest_fields["security"] = sec["uuid"]
-            dbhelper.insert("latest_price", latest_fields, or_replace=True)
-
-        prices_els = el.findall("prices/price")
-        for price_el in prices_els:
-            props = ["t", "v"]
-            price_fields = self.parse_props(price_el, props)
-            ren(price_fields, "v", "value")
-            ren(price_fields, "t", "tstamp")
-            price_fields["security"] = sec["uuid"]
-            dbhelper.insert("price", price_fields, or_replace=True)
-
         for fields in self.parse_attributes(el):
             fields["security"] = sec["uuid"]
             dbhelper.insert("security_attr", fields, or_replace=True)
-
-        for event_el in el.findall("events/event"):
-            props = ["date", "type", "details"]
-            fields = self.parse_props(event_el, props)
-            fields["security"] = sec["uuid"]
-            dbhelper.insert("security_event", fields)
 
         prop_els = el.findall("property")
         for seq, prop_el in enumerate(prop_els):
@@ -153,7 +147,6 @@ class PortfolioPerformanceXML2DB:
             dbhelper.insert("account_attr", fields, or_replace=True)
 
     def handle_account(self, el):
-        el = self.resolve(el)
         props = ["uuid", "name", "currencyCode", ("isRetired", as_bool), "updatedAt"]
         fields = self.parse_props(el, props)
         ren(fields, "currencyCode", "currency")
@@ -162,10 +155,9 @@ class PortfolioPerformanceXML2DB:
         self.handle_account_attrs(el, fields["uuid"])
 
     def handle_portfolio(self, el):
-        el = self.resolve(el)
         props = ["uuid", "name", ("isRetired", as_bool), "updatedAt"]
         fields = self.parse_props(el, props)
-        acc = self.resolve(el.find("referenceAccount"))
+        acc = el.find("referenceAccount")
         fields["referenceAccount"] = self.uuid(acc)
         fields["type"] = "portfolio"
         dbhelper.insert("account", fields, or_replace=True)
@@ -175,24 +167,23 @@ class PortfolioPerformanceXML2DB:
         fields = self.parse_props(el, ["name"])
         id = dbhelper.insert("watchlist", fields, or_replace=True)
         for sec in el.findall("securities/security"):
-            sec = self.resolve(sec)
             fields = {"list": id, "security": self.uuid(sec)}
             dbhelper.insert("watchlist_security", fields, or_replace=True)
 
-    def handle_xact(self, acc_type, acc_uuid, el):
-        el = self.resolve(el)
-
+    def handle_xact(self, acc_type, acc_uuid, el, orderno):
         # Start with calculating unit aggregates, to add to xact row in DB.
         units_dict = defaultdict(int)
         for unit_el in el.findall("units/unit"):
             am_el = unit_el.find("amount")
             units_dict[unit_el.get("type")] += int(am_el.get("amount"))
 
-        props = ["uuid", "date", "currencyCode", "amount", "shares", "note", "updatedAt", "type"]
+        props = ["uuid", "date", "currencyCode", "amount", "shares", "note", "updatedAt", "type", "id"]
         fields = self.parse_props(el, props)
         ren(fields, "currencyCode", "currency")
+        ren(fields, "id", "_xmlid")
         fields["account"] = acc_uuid
         fields["acctype"] = acc_type
+        fields["_order"] = orderno
         sec = el.find("security")
         if sec is not None:
             fields["security"] = self.uuid(sec)
@@ -217,6 +208,55 @@ class PortfolioPerformanceXML2DB:
             if rate_el is not None:
                 fields["exchangeRate"] = rate_el.text
             dbhelper.insert("xact_unit", fields, or_replace=True)
+
+    def handle_crossEntry(self, x_el):
+            if x_el.get("reference") is not None:
+                return
+
+            typ = x_el.get("class")
+            if typ == "buysell":
+                fields = {
+                    "type": typ,
+                    "from_acc": self.uuid(x_el.find("portfolio")),
+                    "from_xact": self.uuid(x_el.find("portfolioTransaction")),
+                    "to_acc": self.uuid(x_el.find("account")),
+                    "to_xact": self.uuid(x_el.find("accountTransaction")),
+                }
+            elif typ == "account-transfer":
+                fields = {
+                    "type": typ,
+                    "from_acc": self.uuid(x_el.find("accountFrom")),
+                    "from_xact": self.uuid(x_el.find("transactionFrom")),
+                    "to_acc": self.uuid(x_el.find("accountTo")),
+                    "to_xact": self.uuid(x_el.find("transactionTo")),
+                }
+            elif typ == "portfolio-transfer":
+                fields = {
+                    "type": typ,
+                    "from_acc": self.uuid(x_el.find("portfolioFrom")),
+                    "from_xact": self.uuid(x_el.find("transactionFrom")),
+                    "to_acc": self.uuid(x_el.find("portfolioTo")),
+                    "to_xact": self.uuid(x_el.find("transactionTo")),
+                }
+            else:
+                raise NotImplementedError(typ)
+            dbhelper.insert("xact_cross_entry", fields, or_replace=True)
+
+    def handle_taxonomy(self, taxon_el):
+            props = ["id", "name"]
+            fields = self.parse_props(taxon_el, props)
+            ren(fields, "id", "uuid")
+            for dim_els in taxon_el.findall("dimensions/string"):
+                dim_fields = {
+                    "taxonomy": fields["uuid"],
+                    "name": "dimension",
+                    "value": dim_els.text,
+                }
+                dbhelper.insert("taxonomy_data", dim_fields, or_replace=True)
+            root_el = taxon_el.find("root")
+            fields["root"] = self.uuid(root_el)
+            dbhelper.insert("taxonomy", fields, or_replace=True)
+            self.handle_taxonomy_level(fields["uuid"], None, root_el)
 
     def handle_taxonomy_level(self, taxon_uuid, parent_uuid, level_el):
         props = ["id", "name", "color", "weight", "rank"]
@@ -250,10 +290,72 @@ class PortfolioPerformanceXML2DB:
         for ch_el in level_el.findall("children/classification"):
             self.handle_taxonomy_level(taxon_uuid, level_uuid, ch_el)
 
-    def __init__ (self, etree):
-        self.etree = etree
+    def handle_dashboard(self, dashb_el):
+            fields = {"name": dashb_el.get("name")}
+            conf = self.parse_configuration(dashb_el)
+            fields["config_json"] = json.dumps(conf)
+
+            columns = []
+            for col_el in dashb_el.findall("columns/column"):
+                props = ["weight"]
+                col_fields = self.parse_props(col_el, props)
+                col_fields["widgets"] = []
+                for widget_el in col_el.findall("widgets/widget"):
+                    wid_fields = self.parse_props(widget_el, ["label"])
+                    wid_fields["type"] = widget_el.get("type")
+                    if widget_el.find("configuration") is not None:
+                        conf = self.parse_configuration(widget_el)
+                        wid_fields["config"] = conf
+                    col_fields["widgets"].append(wid_fields)
+                columns.append(col_fields)
+            fields["columns_json"] = json.dumps(columns)
+            dbhelper.insert("dashboard", fields, or_replace=True)
+
+    def handle_settings(self, settings_el):
+        for bmark_el in settings_el.findall("bookmarks/bookmark"):
+            props = ["label", "pattern"]
+            fields = self.parse_props(bmark_el, props)
+            dbhelper.insert("bookmark", fields, or_replace=True)
+
+        for attr_type_el in settings_el.findall("attributeTypes/attribute-type"):
+            props = ["id", "name", "columnLabel", "source", "target", "type", "converterClass"]
+            fields = self.parse_props(attr_type_el, props)
+            props = []
+            for p in self.parse_attributes(attr_type_el, "properties"):
+                props.append({"name": p["attr_uuid"], "type": p["type"], "value": p["value"]})
+            fields["props_json"] = json.dumps(props)
+            dbhelper.insert("attribute_type", fields, or_replace=True)
+
+        for config_set_el in settings_el.findall("configurationSets/entry"):
+            props = ["string"]
+            fields = self.parse_props(config_set_el, props)
+            ren(fields, "string", "name")
+            cset_id = dbhelper.insert("config_set", fields, or_replace=True)
+            for config_e_el in config_set_el.findall("config-set/configurations/config"):
+                props = ["uuid", "name", "data"]
+                fields = self.parse_props(config_e_el, props)
+                fields["config_set"] = cset_id
+                dbhelper.insert("config_entry", fields, or_replace=True)
+
+    def handle_toplevel_properties(self, el):
+        for prop_el in el.findall("entry"):
+            d = self.parse_entry(prop_el)
+            assert d[0][0] == "string"
+            assert d[1][0] == "string"
+            fields = {"name": d[0][1], "value": d[1][1]}
+            dbhelper.insert("property", fields, or_replace=True)
+
+    def handle_client(self, el):
+        props = ["version", "baseCurrency"]
+        fields = self.parse_props(el, props)
+        for n in props:
+            dbhelper.insert("property", {"name": n, "value": fields[n], "special": 1}, or_replace=True)
+
+    def __init__(self, xml):
+        self.xml = xml
         self.refcache = {}
 
+    def parse(self):
         props = ["version", "baseCurrency"]
         fields = self.parse_props(self.etree, props)
         for n in props:
@@ -292,109 +394,148 @@ class PortfolioPerformanceXML2DB:
 
         _log.info("Handling <crossEntry>")
         for x_el in self.etree.findall("//crossEntry"):
-            if x_el.get("reference") is not None:
-                continue
-            typ = x_el.get("class")
-            if typ == "buysell":
-                fields = {
-                    "type": typ,
-                    "from_acc": self.uuid(x_el.find("portfolio")),
-                    "from_xact": self.uuid(x_el.find("portfolioTransaction")),
-                    "to_acc": self.uuid(x_el.find("account")),
-                    "to_xact": self.uuid(x_el.find("accountTransaction")),
-                }
-            elif typ == "account-transfer":
-                fields = {
-                    "type": typ,
-                    "from_acc": self.uuid(x_el.find("accountFrom")),
-                    "from_xact": self.uuid(x_el.find("transactionFrom")),
-                    "to_acc": self.uuid(x_el.find("accountTo")),
-                    "to_xact": self.uuid(x_el.find("transactionTo")),
-                }
-            elif typ == "portfolio-transfer":
-                fields = {
-                    "type": typ,
-                    "from_acc": self.uuid(x_el.find("portfolioFrom")),
-                    "from_xact": self.uuid(x_el.find("transactionFrom")),
-                    "to_acc": self.uuid(x_el.find("portfolioTo")),
-                    "to_xact": self.uuid(x_el.find("transactionTo")),
-                }
-            else:
-                raise NotImplementedError(typ)
-            dbhelper.insert("xact_cross_entry", fields, or_replace=True)
+            self.handle_crossEntry(x_el)
 
         _log.info("Handling <taxonomy>")
         for taxon_el in self.etree.findall("taxonomies/taxonomy"):
-            props = ["id", "name"]
-            fields = self.parse_props(taxon_el, props)
-            ren(fields, "id", "uuid")
-            for dim_els in taxon_el.findall("dimensions/string"):
-                dim_fields = {
-                    "taxonomy": fields["uuid"],
-                    "name": "dimension",
-                    "value": dim_els.text,
-                }
-                dbhelper.insert("taxonomy_data", dim_fields, or_replace=True)
-            root_el = taxon_el.find("root")
-            fields["root"] = self.uuid(root_el)
-            dbhelper.insert("taxonomy", fields, or_replace=True)
-            self.handle_taxonomy_level(fields["uuid"], None, root_el)
+            self.handle_taxonomy(taxon_el)
 
         _log.info("Handling <dashboard>")
         for dashb_el in self.etree.findall("dashboards/dashboard"):
-            fields = {"name": dashb_el.get("name")}
-            conf = self.parse_configuration(dashb_el)
-            fields["config_json"] = json.dumps(conf)
-
-            columns = []
-            for col_el in dashb_el.findall("columns/column"):
-                props = ["weight"]
-                col_fields = self.parse_props(col_el, props)
-                col_fields["widgets"] = []
-                for widget_el in col_el.findall("widgets/widget"):
-                    wid_fields = self.parse_props(widget_el, ["label"])
-                    wid_fields["type"] = widget_el.get("type")
-                    if widget_el.find("configuration") is not None:
-                        conf = self.parse_configuration(widget_el)
-                        wid_fields["config"] = conf
-                    col_fields["widgets"].append(wid_fields)
-                columns.append(col_fields)
-            fields["columns_json"] = json.dumps(columns)
-            dbhelper.insert("dashboard", fields, or_replace=True)
+            self.handle_dashboard(dashb_el)
 
         _log.info("Handling <properties>")
-        for prop_el in self.etree.findall("properties/entry"):
-            d = self.parse_entry(prop_el)
-            assert d[0][0] == "string"
-            assert d[1][0] == "string"
-            fields = {"name": d[0][1], "value": d[1][1]}
-            dbhelper.insert("property", fields, or_replace=True)
+        self.handle_toplevel_properties(self.etree.find("properties"))
 
         _log.info("Handling <settings>")
-        for bmark_el in self.etree.findall("settings/bookmarks/bookmark"):
-            props = ["label", "pattern"]
-            fields = self.parse_props(bmark_el, props)
-            dbhelper.insert("bookmark", fields, or_replace=True)
+        self.handle_settings(self.etree.find("settings"))
 
-        for attr_type_el in self.etree.findall("settings/attributeTypes/attribute-type"):
-            props = ["id", "name", "columnLabel", "source", "target", "type", "converterClass"]
-            fields = self.parse_props(attr_type_el, props)
-            props = []
-            for p in self.parse_attributes(attr_type_el, "properties"):
-                props.append({"name": p["attr_uuid"], "type": p["type"], "value": p["value"]})
-            fields["props_json"] = json.dumps(props)
-            dbhelper.insert("attribute_type", fields, or_replace=True)
+    def cur_uuid(self):
+        return self.container_stack[-1][1]
 
-        for config_set_el in self.etree.findall("settings/configurationSets/entry"):
-            props = ["string"]
-            fields = self.parse_props(config_set_el, props)
-            ren(fields, "string", "name")
-            cset_id = dbhelper.insert("config_set", fields, or_replace=True)
-            for config_e_el in config_set_el.findall("config-set/configurations/config"):
-                props = ["uuid", "name", "data"]
-                fields = self.parse_props(config_e_el, props)
-                fields["config_set"] = cset_id
-                dbhelper.insert("config_entry", fields, or_replace=True)
+    def iterparse(self):
+        self.el_stack = []
+        self.container_stack = []
+        self.cur_xmlid = None
+        self.id2uuid_map = {}
+        self.uuid2ctr_map = {}
+        self.xact_order = 1
+        for event, el in ET.iterparse(self.xml, events=("start", "end")):
+            #print(event, el, el.attrib)
+            if event == "start":
+                self.el_stack.append(el.tag)
+                if el.tag in ("security", "account", "portfolio"):
+                    self.cur_xmlid = el.get("id")
+                    if self.cur_xmlid is not None:
+                        # Real element definition, not reference
+                        self.container_stack.append([el.tag, None])
+                        #print("Pushed on container stack:", self.container_stack)
+                elif el.tag in ("account-transaction", "accountTransaction", "portfolio-transaction", "portfolioTransaction"):
+                    self.cur_xmlid = el.get("id")
+                elif el.tag in ("root", "classification"):
+                    self.cur_xmlid = el.get("id")
+                elif el.tag in ("taxonomy", "dashboard", "settings"):
+                    self.container_stack.append([el.tag, None])
+
+            elif event == "end":
+                assert self.el_stack[-1] == el.tag
+                self.el_stack.pop()
+                if el.tag in ("uuid", "id"):
+                    if  self.container_stack and self.container_stack[-1][1] is None:
+                        self.container_stack[-1][1] = el.text
+                        #print("Setting uuid of top container:", self.container_stack, el.sourceline)
+                        self.uuid2ctr_map[el.text] = self.container_stack[-1][0]
+                    self.id2uuid_map[self.cur_xmlid] = el.text
+
+                elif el.tag == "price":
+                    self.handle_price(el)
+                elif el.tag == "latest":
+                    self.handle_latest(el)
+                elif el.tag == "event":
+                    self.handle_event(el)
+
+                elif el.tag == "security":
+                    self.handle_security(el)
+                elif el.tag == "watchlist":
+                    self.handle_watchlist(el)
+                elif el.tag == "account":
+                    if el.get("id"):
+                        self.handle_account(el)
+                elif el.tag == "portfolio":
+                    if el.get("id"):
+                        self.handle_portfolio(el)
+
+                elif el.tag == "account-transaction":
+                    if el.get("id"):
+                        assert self.uuid2ctr_map[self.cur_uuid()] == "account"
+                        self.handle_xact("account", self.cur_uuid(), el, self.xact_order)
+                        self.xact_order += 1
+                    else:
+                        xmlid = el.get("reference")
+                        dbhelper.execute_insert("UPDATE xact SET _order=? WHERE _xmlid=?", (self.xact_order, xmlid))
+                        self.xact_order += 1
+
+                elif el.tag == "accountTransaction":
+                    if el.get("id"):
+                        parent = el.getparent()
+                        uuid = self.uuid(parent.find("account"))
+                        assert self.uuid2ctr_map[uuid] == "account"
+                        self.handle_xact("account", uuid, el, 0)
+
+                elif el.tag in ("portfolio-transaction",):
+                    if el.get("id"):
+                        assert self.uuid2ctr_map[self.cur_uuid()] == "portfolio"
+                        self.handle_xact("portfolio", self.cur_uuid(), el, 0)
+                        pass
+
+                elif el.tag in ("portfolioTransaction",):
+                    if el.get("id"):
+                        parent = el.getparent()
+                        uuid = self.uuid(parent.find("portfolio"))
+                        assert self.uuid2ctr_map[uuid] == "portfolio"
+                        self.handle_xact("portfolio", uuid, el, 0)
+
+                elif el.tag == "crossEntry":
+                    if el.get("id"):
+                        self.handle_crossEntry(el)
+
+                elif el.tag == "taxonomy":
+                    self.handle_taxonomy(el)
+                elif el.tag == "dashboard":
+                    self.handle_dashboard(el)
+                elif el.tag == "settings":
+                    self.handle_settings(el)
+                elif el.tag == "properties" and self.el_stack[-1] == "client":
+                    self.handle_toplevel_properties(el)
+                elif el.tag == "client":
+                    self.handle_client(el)
+
+                if el.get("reference") is None and self.container_stack and self.container_stack[-1][0] == el.tag:
+                    self.container_stack.pop()
+
+                # To save memory, we clear children of processed elements,
+                # execept for cases below.
+                preserve = False
+                if self.container_stack and self.container_stack[-1][0] in ("taxonomy", "dashboard", "settings"):
+                    preserve = True
+                elif el.tag in ("units", "unit"):
+                    preserve = True
+                elif el.tag in ("limitPrice",):
+                    preserve = True
+                elif el.tag in ("map", "entry"):
+                    preserve = True
+                elif self.el_stack and self.el_stack[-1] == "watchlist" and el.tag == "securities":
+                    preserve = True
+                elif self.container_stack and self.container_stack[-1][0] in ("security", "account", "portfolio") and el.tag == "attributes":
+                    preserve = True
+
+                if not preserve:
+                    # Remove children and text of elements. We don't use
+                    # el.clear(), as that also removed attributes, but
+                    # we want to preserve them (need id/reference at least).
+                    for ch in list(el):
+                        el.remove(ch)
+                        el.text = el.tail = None
 
 
 if __name__ == "__main__":
@@ -410,8 +551,10 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     dbhelper.init(args.db_file)
-    with open(args.xml_file, encoding="utf-8") as f:
-        root = ET.parse(f)
-    conv = PortfolioPerformanceXML2DB(root)
+
+    with open(args.xml_file, "rb") as f:
+        conv = PortfolioPerformanceXML2DB(f)
+        conv.iterparse()
+
     if not args.dry_run:
         dbhelper.commit()

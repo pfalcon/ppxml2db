@@ -265,7 +265,7 @@ class PortfolioPerformanceXML2DB:
             self.handle_portfolio(el)
 
         _log.info("Handling <account-transaction>")
-        for acc_el in self.etree.findall("accounts/account"):
+        for acc_el in self.etree.findall(".//account"):
             acc_uuid = self.uuid(acc_el)
             for xact_el in acc_el.findall(".//account-transaction"):
                 self.handle_xact("account", acc_uuid, xact_el)

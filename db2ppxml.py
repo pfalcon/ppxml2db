@@ -422,7 +422,7 @@ def main():
 
 if __name__ == "__main__":
     argp = argparse.ArgumentParser(description="Export Sqlite DB to PortfolioPerformance XML file")
-    argp.add_argument("db_file", help="output DB file")
+    argp.add_argument("db_file", help="input DB file")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
     args = argp.parse_args()
 

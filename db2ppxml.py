@@ -123,8 +123,8 @@ def make_xact(etree, pel, tag, xact_r):
                     make_portfolio(etree, x, x_r["portfolio"])
                     rf = ET.SubElement(x, "portfolioTransaction")
                     assert try_ref(etree, rf, x_r["portfolio_xact"])
-                    rf = ET.SubElement(x, "account")
-                    try_ref(etree, rf, x_r["account"])
+                    acc_r = dbhelper.select("account", where="uuid='%s'" % x_r["account"])[0]
+                    make_account(etree, x, acc_r)
 
                     acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["account_xact"])[0]
                     make_xact(etree, x, "accountTransaction", acc_xact_r)
@@ -175,6 +175,8 @@ def make_portfolio(etree, pel, uuid):
 
 def make_account(etree, pel, acc_r, el_name="account"):
         acc = ET.SubElement(pel, el_name)
+        if try_ref(etree, acc, acc_r["uuid"]):
+            return
         output_els[acc_r["uuid"]] = acc
         make_prop(acc, acc_r, "uuid")
         make_prop(acc, acc_r, "name")

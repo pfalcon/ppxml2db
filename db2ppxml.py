@@ -19,6 +19,27 @@ output_els = {}
 # (portfolio_xact, account_xact) to element
 cross_els = {}
 
+xml_id = 0
+uuid2xmlid = {}
+
+
+def add_xmlid(el, uuid=None):
+    global xml_id
+
+    if args.xpath:
+        return
+
+    xml_id += 1
+    el.attrib["id"] = str(xml_id)
+    if uuid is not None:
+        uuid2xmlid[uuid] = str(xml_id)
+
+
+def ET_SubElementWId(parent, tag, uuid=None):
+    el = ET.SubElement(parent, tag)
+    add_xmlid(el, uuid)
+    return el
+
 
 def as_bool(v):
     return ["false", "true"][v]
@@ -62,6 +83,9 @@ def make_configuration(pel, conf):
 
 
 def security_ref(uuid, levels=4):
+    if not args.xpath:
+        return uuid2xmlid[uuid]
+
     ref = "../" * levels + "securities/security"
     i = sec_map[uuid]
     if i != 0:
@@ -70,6 +94,10 @@ def security_ref(uuid, levels=4):
 
 
 def make_ref(etree, el, to_el):
+    if not args.xpath:
+        el.set("reference", to_el.get("id"))
+        return
+
     rel_path = os.path.relpath(etree.getelementpath(to_el), etree.getelementpath(el))
     rel_path = rel_path.replace("[1]", "")
     # Workaround for Windows.
@@ -78,6 +106,12 @@ def make_ref(etree, el, to_el):
 
 
 def try_ref(etree, el, uuid):
+    if not args.xpath:
+        if uuid in uuid2xmlid:
+            el.set("reference", uuid2xmlid[uuid])
+            return True
+        return False
+
     if uuid in output_els:
         make_ref(etree, el, output_els[uuid])
         return True
@@ -88,6 +122,7 @@ def make_xact(etree, pel, tag, xact_r):
             if try_ref(etree, xact, xact_r["uuid"]):
                 return
 
+            add_xmlid(xact, xact_r["uuid"])
             output_els[xact_r["uuid"]] = xact
             make_prop(xact, xact_r, "uuid")
             make_prop(xact, xact_r, "date")
@@ -109,6 +144,7 @@ def make_xact(etree, pel, tag, xact_r):
                 if existing_x is not None:
                     make_ref(etree, x, existing_x)
                     continue
+                add_xmlid(x)
                 cross_els[cross_key] = x
                 if x_r["type"] == "account-transfer":
                     accfrom_r = dbhelper.select("account", where="uuid='%s'" % x_r["from_acc"])[0]
@@ -171,6 +207,7 @@ def make_portfolio(etree, pel, uuid, el_name="portfolio"):
         el = ET.SubElement(pel, el_name)
         if try_ref(etree, el, uuid):
             return
+        add_xmlid(el, uuid)
         output_els[uuid] = el
         port_r = dbhelper.select("account", where="uuid='%s'" % uuid)[0]
         make_prop(el, port_r, "uuid")
@@ -192,6 +229,7 @@ def make_account(etree, pel, acc_r, el_name="account"):
         acc = ET.SubElement(pel, el_name)
         if try_ref(etree, acc, acc_r["uuid"]):
             return
+        add_xmlid(acc, acc_r["uuid"])
         output_els[acc_r["uuid"]] = acc
         make_prop(acc, acc_r, "uuid")
         make_prop(acc, acc_r, "name")
@@ -239,7 +277,7 @@ def custom_dump(el, stream):
 
 def make_taxonomy_level(etree, pel, level_r):
         tag = "root" if level_r["parent"] is None else "classification"
-        level = ET.SubElement(pel, tag)
+        level = ET_SubElementWId(pel, tag, level_r["uuid"])
         output_els[level_r["uuid"]] = level
         make_prop(level, level_r, "id", "uuid")
         make_prop(level, level_r, "name")
@@ -275,6 +313,7 @@ def make_taxonomy_level(etree, pel, level_r):
 
 def main():
     root = ET.Element("client")
+    add_xmlid(root)
     etree = ET.ElementTree(root)
     for n in ["version", "baseCurrency"]:
         row = dbhelper.select("property", where="name='%s'" % n)[0]
@@ -285,7 +324,7 @@ def main():
     for i, sec_r in enumerate(dbhelper.select("security")):
     #    print(dict(sec_r))
         sec_map[sec_r["uuid"]] = i
-        sec = ET.SubElement(securities, "security")
+        sec = ET_SubElementWId(securities, "security", sec_r["uuid"])
         output_els[sec_r["uuid"]] = sec
         make_prop(sec, sec_r, "uuid")
         make_prop(sec, sec_r, "onlineId")
@@ -339,7 +378,7 @@ def main():
 
     watchlists = ET.SubElement(root, "watchlists")
     for wlist_r in dbhelper.select("watchlist"):
-        wlist = ET.SubElement(watchlists, "watchlist")
+        wlist = ET_SubElementWId(watchlists, "watchlist")
         make_prop(wlist, wlist_r, "name")
         secs = ET.SubElement(wlist, "securities")
         for wlist_sec_r in dbhelper.select("watchlist_security", where="list=%d" % wlist_r["_id"]):
@@ -442,6 +481,7 @@ if __name__ == "__main__":
     argp = argparse.ArgumentParser(description="Export Sqlite DB to PortfolioPerformance XML file")
     argp.add_argument("db_file", help="input DB file")
     argp.add_argument("xml_file", nargs="?", help="output XML file (stdout if not provided)")
+    argp.add_argument("--xpath", action="store_true", help="use legacy XPath references")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
     argp.add_argument("--version", action="version", version="%(prog)s " + __version__)
     args = argp.parse_args()

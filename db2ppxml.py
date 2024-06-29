@@ -162,7 +162,7 @@ def make_xact(etree, pel, tag, xact_r):
 
 
 def make_xacts(etree, pel, acc_uuid):
-        for xact_r in dbhelper.select("xact", where="account='%s'" % acc_uuid):
+        for xact_r in dbhelper.select("xact", where="account='%s'" % acc_uuid, order="_order"):
             tag = {"account": "account-transaction", "portfolio": "portfolio-transaction"}[xact_r["acctype"]]
             make_xact(etree, pel, tag, xact_r)
 

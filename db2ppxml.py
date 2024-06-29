@@ -417,12 +417,16 @@ def main():
 
     ET.indent(root)
     #ET.dump(root)
-    custom_dump(root, sys.stdout)
+    out = sys.stdout
+    if args.xml_file:
+        out = open(args.xml_file, "w", encoding="utf-8")
+    custom_dump(root, out)
 
 
 if __name__ == "__main__":
     argp = argparse.ArgumentParser(description="Export Sqlite DB to PortfolioPerformance XML file")
     argp.add_argument("db_file", help="input DB file")
+    argp.add_argument("xml_file", nargs="?", help="output XML file (stdout if not provided)")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
     args = argp.parse_args()
 

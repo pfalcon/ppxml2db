@@ -48,7 +48,9 @@ def select(table, where=None, order=None):
         order = ""
     else:
         order = " ORDER BY " + order
-    cursor.execute("SELECT * FROM %s%s%s" % (table, where, order))
+    sql = "SELECT * FROM %s%s%s" % (table, where, order)
+    cursor.execute(sql)
+    log.debug(sql)
     return cursor.fetchall()
 
 

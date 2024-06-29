@@ -50,6 +50,8 @@ class PortfolioPerformanceXML2DB:
         ref = el.get("reference")
         if ref is not None:
             norm = os.path.normpath(self.etree.getelementpath(el) + "/" + ref)
+            # Workaround for Windows.
+            norm = norm.replace("\\", "/")
             el = self.refcache.get(norm)
             if el is None:
                 el = self.etree.find(norm)

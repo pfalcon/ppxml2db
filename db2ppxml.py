@@ -6,6 +6,7 @@ import json
 
 import lxml.etree as ET
 
+from version import __version__
 import dbhelper
 
 
@@ -428,6 +429,7 @@ if __name__ == "__main__":
     argp.add_argument("db_file", help="input DB file")
     argp.add_argument("xml_file", nargs="?", help="output XML file (stdout if not provided)")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
+    argp.add_argument("--version", action="version", version="%(prog)s " + __version__)
     args = argp.parse_args()
 
     if args.debug:

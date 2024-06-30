@@ -86,8 +86,8 @@ unexpected results on your data. Some of the known issues an TODOs are:
 * For newly created securities, PP may not output empty `<events/>` element,
   while ppxml2db always does. Or to put it differently, PP may either have
   empty `<events/>` element, or not have it at all, while ppxml2db always
-  outputs it. This is a known source of differences in output duing
-  round-tripping. This is routed in details of internal representation:
+  outputs it. This is a known source of differences in output during
+  round-tripping. This is rooted in details of internal representation:
   on the PP level, events may be either a null value, or an empty list.
   On the database side, events are represented by a table and rows in it,
   so there is no natural way to distinguish between "no events" and

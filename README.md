@@ -55,25 +55,25 @@ Note that using `Makefile` requires POSIX-like operating system
 tool. Main scripts are written in [Python3](https://www.python.org).
 
 1. Start PortfolioPerformance. Make sure you see "Welcome" page.
-2. On the "Welcome" page, click "Open the DAX sample file".
-3. "dax.xml" will open in a new tab, press Ctrl+S to save it.
-   That's the sample file we'll use for import/export.
+2. On the "Welcome" page, click "Open the Kommer sample file".
+3. "kommer.xml" will open in a new tab, press Ctrl+S to save it,
+   select XML format. That's the sample file we'll use for import/export.
 4. Copy the file to this project's directory for easy access.
 5. Create an empty database with all the needed tables:
-   `make init DB=dax.db`
+   `make init DB=kommer.db`
 6. Import the XML into the database:
-   `python3 ppxml2db.py dax.xml dax.db`
+   `python3 ppxml2db.py kommer.xml kommer.db`
 7. Export the database to a new XML file:
-   `python3 db2ppxml.py dax.db dax.xml.out`
+   `python3 db2ppxml.py kommer.db kommer.xml.out`
 8. Ensure that the new file matches the original character-by-character:
-   `diff -u dax.xml dax.xml.out`
+   `diff -u kommer.xml kommer.xml.out`
 
 Now let's do something pretty simple, yet useful, and already something
 which PP itself doesn't do: show how many securities are in this portfolio:
 
 ```
-echo "SELECT COUNT(*) FROM security;" | sqlite3 dax.db
-31
+echo "SELECT COUNT(*) FROM security;" | sqlite3 kommer.db
+16
 ```
 
 ## Status and known issues

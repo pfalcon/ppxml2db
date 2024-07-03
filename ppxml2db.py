@@ -268,7 +268,7 @@ class PortfolioPerformanceXML2DB:
             self.handle_portfolio(el)
 
         _log.info("Handling <account-transaction>")
-        for acc_el in self.etree.findall(".//account"):
+        for acc_el in self.etree.xpath(".//*[self::account or self::accountTo]"):
             acc_uuid = self.uuid(acc_el)
             for xact_el in acc_el.findall(".//account-transaction"):
                 self.handle_xact("account", acc_uuid, xact_el)
@@ -293,13 +293,12 @@ class PortfolioPerformanceXML2DB:
                     "account_xact": self.uuid(x_el.find("accountTransaction")),
                 }
             elif typ == "account-transfer":
-                raise NotImplementedError
                 fields = {
                     "type": typ,
-                    "accountFrom": self.uuid(x_el.find("accountFrom")),
-                    "accountFrom_xact": self.uuid(x_el.find("transactionFrom")),
-                    "account": self.uuid(x_el.find("accountTo")),
-                    "account_xact": self.uuid(x_el.find("transactionTo")),
+                    "account": self.uuid(x_el.find("accountFrom")),
+                    "account_xact": self.uuid(x_el.find("transactionFrom")),
+                    "accountTo": self.uuid(x_el.find("accountTo")),
+                    "accountTo_xact": self.uuid(x_el.find("transactionTo")),
                 }
             else:
                 raise NotImplementedError

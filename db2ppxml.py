@@ -100,10 +100,10 @@ def make_xact(etree, pel, tag, xact_r):
 
             # 0 or 1
             if xact_r["acctype"] == "account":
-                crit = "account_xact='%s'"
+                crit = "account_xact='%s' OR accountTo_xact='%s'" % (xact_r["uuid"], xact_r["uuid"])
             else:
-                crit = "portfolio_xact='%s'"
-            for x_r in dbhelper.select("xact_cross_entry", where=crit % xact_r["uuid"]):
+                crit = "portfolio_xact='%s'" % xact_r["uuid"]
+            for x_r in dbhelper.select("xact_cross_entry", where=crit):
                 #print(dict(x_r))
                 x = ET.SubElement(xact, "crossEntry")
                 x.set("class", x_r["type"])
@@ -115,11 +115,14 @@ def make_xact(etree, pel, tag, xact_r):
                 cross_els[cross_key] = x
                 if x_r["type"] == "account-transfer":
                     rf = ET.SubElement(x, "accountFrom")
-                    assert try_ref(etree, rf, x_r["accountFrom"])
+                    assert try_ref(etree, rf, x_r["account"])
                     rf = ET.SubElement(x, "transactionFrom")
-                    assert try_ref(etree, rf, x_r["accountFrom_xact"])
-                    accto_r = dbhelper.select("account", where="uuid='%s'" % x_r["account"])[0]
+                    assert try_ref(etree, rf, x_r["account_xact"])
+                    accto_r = dbhelper.select("account", where="uuid='%s'" % x_r["accountTo"])[0]
                     make_account(etree, x, accto_r, el_name="accountTo")
+
+                    acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["accountTo_xact"])[0]
+                    make_xact(etree, x, "transactionTo", acc_xact_r)
                 else:
                     make_portfolio(etree, x, x_r["portfolio"])
                     rf = ET.SubElement(x, "portfolioTransaction")

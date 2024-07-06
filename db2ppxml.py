@@ -116,8 +116,8 @@ def make_xact(etree, pel, tag, xact_r):
                 if x_r["type"] == "account-transfer":
                     rf = ET.SubElement(x, "accountFrom")
                     assert try_ref(etree, rf, x_r["account"])
-                    rf = ET.SubElement(x, "transactionFrom")
-                    assert try_ref(etree, rf, x_r["account_xact"])
+                    acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["account_xact"])[0]
+                    make_xact(etree, x, "transactionFrom", acc_xact_r)
                     accto_r = dbhelper.select("account", where="uuid='%s'" % x_r["accountTo"])[0]
                     make_account(etree, x, accto_r, el_name="accountTo")
 

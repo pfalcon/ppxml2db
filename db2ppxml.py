@@ -145,6 +145,10 @@ def make_xact(etree, pel, tag, xact_r):
                     a = ET.SubElement(u, "amount")
                     a.set("currency", unit_r["currencyCode"])
                     a.set("amount", str(unit_r["amount"]))
+                    if unit_r["forex_amount"] is not None or unit_r["forex_currencyCode"] is not None:
+                        forex = ET.SubElement(u, "forex")
+                        forex.set("currency", unit_r["forex_currencyCode"])
+                        forex.set("amount", str(unit_r["forex_amount"]))
 
             make_prop(xact, xact_r, "updatedAt")
             make_prop(xact, xact_r, "type")

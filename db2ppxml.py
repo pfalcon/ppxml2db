@@ -149,6 +149,8 @@ def make_xact(etree, pel, tag, xact_r):
                         forex = ET.SubElement(u, "forex")
                         forex.set("currency", unit_r["forex_currencyCode"])
                         forex.set("amount", str(unit_r["forex_amount"]))
+                        forex = ET.SubElement(u, "exchangeRate")
+                        forex.text = str(unit_r["exchangeRate"])
 
             make_prop(xact, xact_r, "updatedAt")
             make_prop(xact, xact_r, "type")

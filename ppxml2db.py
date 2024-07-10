@@ -209,6 +209,9 @@ class PortfolioPerformanceXML2DB:
             if forex_el is not None:
                 fields["forex_amount"] = forex_el.get("amount")
                 fields["forex_currencyCode"] = forex_el.get("currency")
+            rate_el = unit_el.find("exchangeRate")
+            if rate_el is not None:
+                fields["exchangeRate"] = rate_el.text
             dbhelper.insert("xact_unit", fields, or_replace=True)
 
     def handle_taxonomy_level(self, taxon_uuid, parent_uuid, level_el):

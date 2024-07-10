@@ -312,7 +312,7 @@ class PortfolioPerformanceXML2DB:
                     "accountTo_xact": self.uuid(x_el.find("transactionTo")),
                 }
             else:
-                raise NotImplementedError
+                raise NotImplementedError(typ)
             dbhelper.insert("xact_cross_entry", fields, or_replace=True)
 
         _log.info("Handling <taxonomy>")

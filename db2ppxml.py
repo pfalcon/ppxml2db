@@ -429,7 +429,7 @@ def main():
     #ET.dump(root)
     out = sys.stdout
     if args.xml_file:
-        out = open(args.xml_file, "w", encoding="utf-8")
+        out = open(args.xml_file, "w", encoding="utf-8", newline="\n")
     custom_dump(root, out)
 
 

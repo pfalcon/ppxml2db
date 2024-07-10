@@ -22,8 +22,9 @@ logging.basicConfig(
 
 # Rename field in a dictionary
 def ren(d, old, new):
-    d[new] = d[old]
-    del d[old]
+    if old in d:
+        d[new] = d[old]
+        del d[old]
 
 
 def as_bool(v):
@@ -107,6 +108,7 @@ class PortfolioPerformanceXML2DB:
             ("isRetired", as_bool), "updatedAt"
         ]
         sec = self.parse_props(el, props)
+        ren(sec, "currencyCode", "currency")
         dbhelper.insert("security", sec, or_replace=True)
 
         latest_el = el.find("latest")
@@ -154,6 +156,7 @@ class PortfolioPerformanceXML2DB:
         el = self.resolve(el)
         props = ["uuid", "name", "currencyCode", ("isRetired", as_bool), "updatedAt"]
         fields = self.parse_props(el, props)
+        ren(fields, "currencyCode", "currency")
         fields["type"] = "account"
         dbhelper.insert("account", fields, or_replace=True)
         self.handle_account_attrs(el, fields["uuid"])
@@ -187,6 +190,7 @@ class PortfolioPerformanceXML2DB:
 
         props = ["uuid", "date", "currencyCode", "amount", "shares", "note", "updatedAt", "type"]
         fields = self.parse_props(el, props)
+        ren(fields, "currencyCode", "currency")
         fields["account"] = acc_uuid
         fields["acctype"] = acc_type
         sec = el.find("security")
@@ -203,12 +207,12 @@ class PortfolioPerformanceXML2DB:
                 "xact": xact_uuid,
                 "type": unit_el.get("type"),
                 "amount": am_el.get("amount"),
-                "currencyCode": am_el.get("currency"),
+                "currency": am_el.get("currency"),
             }
             forex_el = unit_el.find("forex")
             if forex_el is not None:
                 fields["forex_amount"] = forex_el.get("amount")
-                fields["forex_currencyCode"] = forex_el.get("currency")
+                fields["forex_currency"] = forex_el.get("currency")
             rate_el = unit_el.find("exchangeRate")
             if rate_el is not None:
                 fields["exchangeRate"] = rate_el.text

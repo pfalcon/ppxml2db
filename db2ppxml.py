@@ -91,7 +91,7 @@ def make_xact(etree, pel, tag, xact_r):
             output_els[xact_r["uuid"]] = xact
             make_prop(xact, xact_r, "uuid")
             make_prop(xact, xact_r, "date")
-            make_prop(xact, xact_r, "currencyCode")
+            make_prop(xact, xact_r, "currencyCode", "currency")
             make_prop(xact, xact_r, "amount")
             if xact_r["security"] is not None:
                 s = ET.SubElement(xact, "security")
@@ -143,11 +143,11 @@ def make_xact(etree, pel, tag, xact_r):
                     u = ET.SubElement(units, "unit")
                     u.set("type", unit_r["type"])
                     a = ET.SubElement(u, "amount")
-                    a.set("currency", unit_r["currencyCode"])
+                    a.set("currency", unit_r["currency"])
                     a.set("amount", str(unit_r["amount"]))
-                    if unit_r["forex_amount"] is not None or unit_r["forex_currencyCode"] is not None:
+                    if unit_r["forex_amount"] is not None or unit_r["forex_currency"] is not None:
                         forex = ET.SubElement(u, "forex")
-                        forex.set("currency", unit_r["forex_currencyCode"])
+                        forex.set("currency", unit_r["forex_currency"])
                         forex.set("amount", str(unit_r["forex_amount"]))
                         forex = ET.SubElement(u, "exchangeRate")
                         forex.text = str(unit_r["exchangeRate"])
@@ -190,7 +190,7 @@ def make_account(etree, pel, acc_r, el_name="account"):
         output_els[acc_r["uuid"]] = acc
         make_prop(acc, acc_r, "uuid")
         make_prop(acc, acc_r, "name")
-        make_prop(acc, acc_r, "currencyCode")
+        make_prop(acc, acc_r, "currencyCode", "currency")
         make_prop(acc, acc_r, "isRetired", conv=as_bool)
 
         xacts = ET.SubElement(acc, "transactions")
@@ -285,7 +285,7 @@ def main():
         make_prop(sec, sec_r, "uuid")
         make_prop(sec, sec_r, "onlineId")
         make_prop(sec, sec_r, "name")
-        make_prop(sec, sec_r, "currencyCode")
+        make_prop(sec, sec_r, "currencyCode", "currency")
         make_prop(sec, sec_r, "note")
         make_prop(sec, sec_r, "isin")
         make_prop(sec, sec_r, "tickerSymbol")

@@ -3,7 +3,7 @@ uuid VARCHAR(36) NOT NULL,
 onlineId VARCHAR(64),
 name VARCHAR(128),
 -- Yes, can be absent (dax.xml).
-currencyCode VARCHAR(16),
+currency VARCHAR(16),
 note TEXT,
 isin VARCHAR(16),
 tickerSymbol VARCHAR(32),

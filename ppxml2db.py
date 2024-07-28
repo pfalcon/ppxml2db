@@ -298,18 +298,18 @@ class PortfolioPerformanceXML2DB:
             if typ == "buysell":
                 fields = {
                     "type": typ,
-                    "portfolio": self.uuid(x_el.find("portfolio")),
-                    "portfolio_xact": self.uuid(x_el.find("portfolioTransaction")),
-                    "account": self.uuid(x_el.find("account")),
-                    "account_xact": self.uuid(x_el.find("accountTransaction")),
+                    "from_acc": self.uuid(x_el.find("portfolio")),
+                    "from_xact": self.uuid(x_el.find("portfolioTransaction")),
+                    "to_acc": self.uuid(x_el.find("account")),
+                    "to_xact": self.uuid(x_el.find("accountTransaction")),
                 }
             elif typ == "account-transfer":
                 fields = {
                     "type": typ,
-                    "account": self.uuid(x_el.find("accountFrom")),
-                    "account_xact": self.uuid(x_el.find("transactionFrom")),
-                    "accountTo": self.uuid(x_el.find("accountTo")),
-                    "accountTo_xact": self.uuid(x_el.find("transactionTo")),
+                    "from_acc": self.uuid(x_el.find("accountFrom")),
+                    "from_xact": self.uuid(x_el.find("transactionFrom")),
+                    "to_acc": self.uuid(x_el.find("accountTo")),
+                    "to_xact": self.uuid(x_el.find("transactionTo")),
                 }
             else:
                 raise NotImplementedError(typ)

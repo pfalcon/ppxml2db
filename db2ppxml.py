@@ -161,8 +161,8 @@ def make_xacts(etree, pel, acc_uuid):
             make_xact(etree, pel, tag, xact_r)
 
 
-def make_portfolio(etree, pel, uuid):
-        el = ET.SubElement(pel, "portfolio")
+def make_portfolio(etree, pel, uuid, el_name="portfolio"):
+        el = ET.SubElement(pel, el_name)
         if try_ref(etree, el, uuid):
             return
         output_els[uuid] = el

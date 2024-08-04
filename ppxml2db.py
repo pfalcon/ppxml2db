@@ -311,6 +311,14 @@ class PortfolioPerformanceXML2DB:
                     "to_acc": self.uuid(x_el.find("accountTo")),
                     "to_xact": self.uuid(x_el.find("transactionTo")),
                 }
+            elif typ == "portfolio-transfer":
+                fields = {
+                    "type": typ,
+                    "from_acc": self.uuid(x_el.find("portfolioFrom")),
+                    "from_xact": self.uuid(x_el.find("transactionFrom")),
+                    "to_acc": self.uuid(x_el.find("portfolioTo")),
+                    "to_xact": self.uuid(x_el.find("transactionTo")),
+                }
             else:
                 raise NotImplementedError(typ)
             dbhelper.insert("xact_cross_entry", fields, or_replace=True)

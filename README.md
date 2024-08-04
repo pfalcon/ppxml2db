@@ -101,6 +101,13 @@ unexpected results on your data. Some of the known issues an TODOs are:
 * "Investment Plans", "Exchange Rates", "Consumer Price Index" objects
   aren't supported (nothing impossible, I just didn't have a chance to
   see these objects in use).
+* Various features / additional properties of other objects may be not
+  supported.
+
+If you are interested in a missing feature to be supported, or a conversion
+issues to be addressed, please prepare a standalone, small XML file
+demonstrating a problem and submit a ticket to the project bugtracker:
+https://github.com/pfalcon/ppxml2db/issues/ .
 
 ## References
 

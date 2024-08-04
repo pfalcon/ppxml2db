@@ -98,7 +98,6 @@ unexpected results on your data. Some of the known issues an TODOs are:
   one of the ppxml2db's goals - to match as close as possible PP's object
   schema, without questionable additions and definitely without adhoc
   workarounds.
-* Cash/security transfers between accounts are currently not supported.
 * "Investment Plans", "Exchange Rates", "Consumer Price Index" objects
   aren't supported (nothing impossible, I just didn't have a chance to
   see these objects in use).

@@ -119,6 +119,15 @@ def make_xact(etree, pel, tag, xact_r):
                     make_account(etree, x, accto_r, el_name="accountTo")
                     acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["to_xact"])[0]
                     make_xact(etree, x, "transactionTo", acc_xact_r)
+                elif x_r["type"] == "portfolio-transfer":
+                    accfrom_r = dbhelper.select("account", where="uuid='%s'" % x_r["from_acc"])[0]
+                    make_portfolio(etree, x, accfrom_r["uuid"], el_name="portfolioFrom")
+                    acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["from_xact"])[0]
+                    make_xact(etree, x, "transactionFrom", acc_xact_r)
+                    accto_r = dbhelper.select("account", where="uuid='%s'" % x_r["to_acc"])[0]
+                    make_portfolio(etree, x, accto_r["uuid"], el_name="portfolioTo")
+                    acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["to_xact"])[0]
+                    make_xact(etree, x, "transactionTo", acc_xact_r)
                 else:
                     make_portfolio(etree, x, x_r["from_acc"])
                     rf = ET.SubElement(x, "portfolioTransaction")

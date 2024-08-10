@@ -429,7 +429,7 @@ class PortfolioPerformanceXML2DB:
             self.el_order += 1
             if event == "start":
                 self.el_stack.append(el.tag)
-                if el.tag in ("security", "account", "portfolio", "portfolioFrom", "portfolioTo"):
+                if el.tag in ("security", "account", "accountFrom", "accountTo", "portfolio", "portfolioFrom", "portfolioTo"):
                     self.cur_xmlid = el.get("id")
                     if self.cur_xmlid is not None:
                         # Real element definition, not reference
@@ -463,7 +463,7 @@ class PortfolioPerformanceXML2DB:
                     self.handle_security(el)
                 elif el.tag == "watchlist":
                     self.handle_watchlist(el)
-                elif el.tag == "account":
+                elif el.tag in ("account", "accountFrom", "accountTo"):
                     if el.get("id"):
                         self.handle_account(el, self.el_order)
                     else:

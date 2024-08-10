@@ -386,11 +386,11 @@ def main():
             s.set("reference", security_ref(wlist_sec_r["security"]))
 
     accounts = ET.SubElement(root, "accounts")
-    for acc_r in dbhelper.select("account", where="type='account'"):
+    for acc_r in dbhelper.select("account", where="type='account'", order="_order"):
         make_account(etree, accounts, acc_r)
 
     portfolios = ET.SubElement(root, "portfolios")
-    for acc_r in dbhelper.select("account", where="type='portfolio'"):
+    for acc_r in dbhelper.select("account", where="type='portfolio'", order="_order"):
         make_portfolio(etree, portfolios, acc_r["uuid"])
 
     plans = ET.SubElement(root, "plans")

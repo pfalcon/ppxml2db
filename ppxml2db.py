@@ -146,20 +146,24 @@ class PortfolioPerformanceXML2DB:
             fields["account"] = uuid
             dbhelper.insert("account_attr", fields, or_replace=True)
 
-    def handle_account(self, el):
-        props = ["uuid", "name", "currencyCode", ("isRetired", as_bool), "updatedAt"]
+    def handle_account(self, el, orderno):
+        props = ["uuid", "name", "currencyCode", ("isRetired", as_bool), "updatedAt", "id"]
         fields = self.parse_props(el, props)
         ren(fields, "currencyCode", "currency")
+        ren(fields, "id", "_xmlid")
         fields["type"] = "account"
+        fields["_order"] = orderno
         dbhelper.insert("account", fields, or_replace=True)
         self.handle_account_attrs(el, fields["uuid"])
 
-    def handle_portfolio(self, el):
-        props = ["uuid", "name", ("isRetired", as_bool), "updatedAt"]
+    def handle_portfolio(self, el, orderno):
+        props = ["uuid", "name", ("isRetired", as_bool), "updatedAt", "id"]
         fields = self.parse_props(el, props)
+        ren(fields, "id", "_xmlid")
         acc = el.find("referenceAccount")
         fields["referenceAccount"] = self.uuid(acc)
         fields["type"] = "portfolio"
+        fields["_order"] = orderno
         dbhelper.insert("account", fields, or_replace=True)
         self.handle_account_attrs(el, fields["uuid"])
 
@@ -461,10 +465,10 @@ class PortfolioPerformanceXML2DB:
                     self.handle_watchlist(el)
                 elif el.tag == "account":
                     if el.get("id"):
-                        self.handle_account(el)
+                        self.handle_account(el, self.el_order)
                 elif el.tag == "portfolio":
                     if el.get("id"):
-                        self.handle_portfolio(el)
+                        self.handle_portfolio(el, self.el_order)
 
                 elif el.tag == "account-transaction":
                     if el.get("id"):

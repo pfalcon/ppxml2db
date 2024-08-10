@@ -419,9 +419,10 @@ class PortfolioPerformanceXML2DB:
         self.cur_xmlid = None
         self.id2uuid_map = {}
         self.uuid2ctr_map = {}
-        self.xact_order = 1
+        self.el_order = 0
         for event, el in ET.iterparse(self.xml, events=("start", "end")):
             #print(event, el, el.attrib)
+            self.el_order += 1
             if event == "start":
                 self.el_stack.append(el.tag)
                 if el.tag in ("security", "account", "portfolio"):
@@ -468,12 +469,10 @@ class PortfolioPerformanceXML2DB:
                 elif el.tag == "account-transaction":
                     if el.get("id"):
                         assert self.uuid2ctr_map[self.cur_uuid()] == "account"
-                        self.handle_xact("account", self.cur_uuid(), el, self.xact_order)
-                        self.xact_order += 1
+                        self.handle_xact("account", self.cur_uuid(), el, self.el_order)
                     else:
                         xmlid = el.get("reference")
-                        dbhelper.execute_insert("UPDATE xact SET _order=? WHERE _xmlid=?", (self.xact_order, xmlid))
-                        self.xact_order += 1
+                        dbhelper.execute_insert("UPDATE xact SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
 
                 elif el.tag == "accountTransaction":
                     if el.get("id"):

@@ -429,7 +429,7 @@ class PortfolioPerformanceXML2DB:
             self.el_order += 1
             if event == "start":
                 self.el_stack.append(el.tag)
-                if el.tag in ("security", "account", "portfolio"):
+                if el.tag in ("security", "account", "portfolio", "portfolioFrom", "portfolioTo"):
                     self.cur_xmlid = el.get("id")
                     if self.cur_xmlid is not None:
                         # Real element definition, not reference
@@ -469,7 +469,7 @@ class PortfolioPerformanceXML2DB:
                     else:
                         xmlid = el.get("reference")
                         dbhelper.execute_insert("UPDATE account SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
-                elif el.tag == "portfolio":
+                elif el.tag in ("portfolio", "portfolioFrom", "portfolioTo"):
                     if el.get("id"):
                         self.handle_portfolio(el, self.el_order)
                     else:

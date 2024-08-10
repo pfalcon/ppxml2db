@@ -435,7 +435,7 @@ class PortfolioPerformanceXML2DB:
                         # Real element definition, not reference
                         self.container_stack.append([el.tag, None])
                         #print("Pushed on container stack:", self.container_stack)
-                elif el.tag in ("account-transaction", "accountTransaction", "portfolio-transaction", "portfolioTransaction"):
+                elif el.tag in ("account-transaction", "accountTransaction", "portfolio-transaction", "portfolioTransaction", "transactionFrom", "transactionTo"):
                     self.cur_xmlid = el.get("id")
                 elif el.tag in ("root", "classification"):
                     self.cur_xmlid = el.get("id")
@@ -503,6 +503,19 @@ class PortfolioPerformanceXML2DB:
                         uuid = self.uuid(parent.find("portfolio"))
                         assert self.uuid2ctr_map[uuid] == "portfolio"
                         self.handle_xact("portfolio", uuid, el, 0)
+
+                elif el.tag == "transactionTo":
+                    if el.get("id"):
+                        parent = el.getparent()
+                        uuid = self.uuid(parent.find("accountTo"))
+                        assert self.uuid2ctr_map[uuid] == "account"
+                        self.handle_xact("account", uuid, el, 0)
+                elif el.tag == "transactionFrom":
+                    if el.get("id"):
+                        parent = el.getparent()
+                        uuid = self.uuid(parent.find("accountFrom"))
+                        assert self.uuid2ctr_map[uuid] == "account"
+                        self.handle_xact("account", uuid, el, 0)
 
                 elif el.tag == "crossEntry":
                     if el.get("id"):

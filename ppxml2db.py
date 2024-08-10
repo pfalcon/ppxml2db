@@ -472,7 +472,7 @@ class PortfolioPerformanceXML2DB:
 
                 elif el.tag == "account-transaction":
                     if el.get("id"):
-                        assert self.uuid2ctr_map[self.cur_uuid()] == "account"
+                        assert self.uuid2ctr_map[self.cur_uuid()].startswith("account")
                         self.handle_xact("account", self.cur_uuid(), el, self.el_order)
                     else:
                         xmlid = el.get("reference")
@@ -487,7 +487,7 @@ class PortfolioPerformanceXML2DB:
 
                 elif el.tag in ("portfolio-transaction",):
                     if el.get("id"):
-                        assert self.uuid2ctr_map[self.cur_uuid()] == "portfolio"
+                        assert self.uuid2ctr_map[self.cur_uuid()].startswith("portfolio")
                         self.handle_xact("portfolio", self.cur_uuid(), el, 0)
                         pass
 

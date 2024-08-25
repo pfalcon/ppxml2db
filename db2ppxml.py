@@ -414,6 +414,7 @@ def main():
     for dashb_r in dbhelper.select("dashboard"):
         dashb = ET.SubElement(dashboards, "dashboard")
         dashb.set("name", dashb_r["name"])
+        make_prop(dashb, dashb_r, "id")
         make_configuration(dashb, json.loads(dashb_r["config_json"]))
         columns = ET.SubElement(dashb, "columns")
         for col_j in json.loads(dashb_r["columns_json"]):

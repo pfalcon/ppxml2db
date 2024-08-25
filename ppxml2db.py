@@ -295,7 +295,8 @@ class PortfolioPerformanceXML2DB:
             self.handle_taxonomy_level(taxon_uuid, level_uuid, ch_el)
 
     def handle_dashboard(self, dashb_el):
-            fields = {"name": dashb_el.get("name")}
+            props = ["id", "name"]
+            fields = self.parse_props(dashb_el, props)
             conf = self.parse_configuration(dashb_el)
             fields["config_json"] = json.dumps(conf)
 

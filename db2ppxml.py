@@ -361,7 +361,10 @@ def main():
         make_attributes(sec, attr_rows)
 
         events = ET.SubElement(sec, "events")
-        for event_r in dbhelper.select("security_event", where="security='%s'" % sec_r["uuid"]):
+        order_args = {}
+        if args.sort_events:
+            order_args = {"order": "date, details"}
+        for event_r in dbhelper.select("security_event", where="security='%s'" % sec_r["uuid"], **order_args):
             event = ET.SubElement(events, "event")
             make_prop(event, event_r, "date")
             make_prop(event, event_r, "type")
@@ -482,6 +485,7 @@ if __name__ == "__main__":
     argp = argparse.ArgumentParser(description="Export Sqlite DB to PortfolioPerformance XML file")
     argp.add_argument("db_file", help="input DB file")
     argp.add_argument("xml_file", nargs="?", help="output XML file (stdout if not provided)")
+    argp.add_argument("--sort-events", action="store_true", help="sort events by date (then description)")
     argp.add_argument("--xpath", action="store_true", help="use legacy XPath references")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
     argp.add_argument("--version", action="version", version="%(prog)s " + __version__)

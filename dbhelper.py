@@ -60,6 +60,8 @@ def select(table, where=None, order=None):
     else:
         order = " ORDER BY " + order
     sql = "SELECT * FROM %s%s%s" % (table, where, order)
+    if LOG_SQL_TO_FILE:
+        sqllog.write("%s\n" % sql)
     cursor.execute(sql)
     log.debug(sql)
     return cursor.fetchall()

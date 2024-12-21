@@ -489,7 +489,7 @@ class PortfolioPerformanceXML2DB:
                     if el.get("id"):
                         parent = el.getparent()
                         uuid = self.uuid(parent.find("account"))
-                        assert self.uuid2ctr_map[uuid] == "account"
+                        assert self.uuid2ctr_map[uuid].startswith("account"), self.uuid2ctr_map[uuid]
                         self.handle_xact("account", uuid, el, 0)
 
                 elif el.tag in ("portfolio-transaction",):

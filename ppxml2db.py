@@ -504,20 +504,20 @@ class PortfolioPerformanceXML2DB:
                     if el.get("id"):
                         parent = el.getparent()
                         uuid = self.uuid(parent.find("portfolio"))
-                        assert self.uuid2ctr_map[uuid] == "portfolio"
+                        assert self.uuid2ctr_map[uuid] == "portfolio", self.uuid2ctr_map[uuid]
                         self.handle_xact("portfolio", uuid, el, 0)
 
                 elif el.tag == "transactionTo":
                     if el.get("id"):
                         parent = el.getparent()
                         uuid = self.uuid(parent.find("accountTo"))
-                        assert self.uuid2ctr_map[uuid] == "account"
+                        assert self.uuid2ctr_map[uuid] == "account", self.uuid2ctr_map[uuid]
                         self.handle_xact("account", uuid, el, 0)
                 elif el.tag == "transactionFrom":
                     if el.get("id"):
                         parent = el.getparent()
                         uuid = self.uuid(parent.find("accountFrom"))
-                        assert self.uuid2ctr_map[uuid] == "account"
+                        assert self.uuid2ctr_map[uuid] == "account", self.uuid2ctr_map[uuid]
                         self.handle_xact("account", uuid, el, 0)
 
                 elif el.tag == "crossEntry":

@@ -496,7 +496,9 @@ class PortfolioPerformanceXML2DB:
                     if el.get("id"):
                         assert self.uuid2ctr_map[self.cur_uuid()].startswith("portfolio")
                         self.handle_xact("portfolio", self.cur_uuid(), el, 0)
-                        pass
+                    else:
+                        xmlid = el.get("reference")
+                        dbhelper.execute_insert("UPDATE xact SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
 
                 elif el.tag in ("portfolioTransaction",):
                     if el.get("id"):

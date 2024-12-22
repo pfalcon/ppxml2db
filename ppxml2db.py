@@ -510,9 +510,18 @@ class PortfolioPerformanceXML2DB:
                 elif el.tag == "transactionTo":
                     if el.get("id"):
                         parent = el.getparent()
-                        uuid = self.uuid(parent.find("accountTo"))
-                        assert self.uuid2ctr_map[uuid] == "account", self.uuid2ctr_map[uuid]
-                        self.handle_xact("account", uuid, el, 0)
+                        assert parent.tag == "crossEntry"
+                        if parent.get("class") == "account-transfer":
+                            what = "account"
+                            uuid = self.uuid(parent.find("accountTo"))
+                        elif parent.get("class") == "portfolio-transfer":
+                            what = "portfolio"
+                            uuid = self.uuid(parent.find("portfolioTo"))
+                        else:
+                            assert False, "Unexpected crossEntry class: " + parent.get("class")
+
+                        assert self.uuid2ctr_map[uuid].startswith(what), self.uuid2ctr_map[uuid]
+                        self.handle_xact(what, uuid, el, 0)
                 elif el.tag == "transactionFrom":
                     if el.get("id"):
                         parent = el.getparent()

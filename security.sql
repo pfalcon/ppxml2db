@@ -18,3 +18,5 @@ isRetired INT NOT NULL DEFAULT 0,
 updatedAt VARCHAR(64) NOT NULL,
 PRIMARY KEY(uuid)
 );
+
+CREATE INDEX security__tickerSymbol ON security(tickerSymbol);

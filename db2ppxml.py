@@ -213,8 +213,8 @@ def make_portfolio(etree, pel, uuid, el_name="portfolio"):
         make_prop(el, port_r, "uuid")
         make_prop(el, port_r, "name")
         make_prop(el, port_r, "isRetired", conv=as_bool)
-        a = ET.SubElement(el, "referenceAccount")
-        try_ref(etree, a, port_r["referenceAccount"])
+        refacc_r = dbhelper.select("account", where="uuid='%s'" % port_r["referenceAccount"])[0]
+        make_account(etree, el, refacc_r, el_name="referenceAccount")
 
         xacts = ET.SubElement(el, "transactions")
         make_xacts(etree, xacts, port_r["uuid"])

@@ -471,13 +471,13 @@ class PortfolioPerformanceXML2DB:
                 elif el.tag in ("account", "accountFrom", "accountTo", "referenceAccount"):
                     if el.get("id"):
                         self.handle_account(el, self.el_order)
-                    else:
+                    elif el.tag == "account":
                         xmlid = el.get("reference")
                         dbhelper.execute_insert("UPDATE account SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
                 elif el.tag in ("portfolio", "portfolioFrom", "portfolioTo"):
                     if el.get("id"):
                         self.handle_portfolio(el, self.el_order)
-                    else:
+                    elif el.tag == "portfolio":
                         xmlid = el.get("reference")
                         dbhelper.execute_insert("UPDATE account SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
 

@@ -59,6 +59,10 @@ class PortfolioPerformanceXML2DB:
         assert id is not None
         return self.id2uuid_map[id]
 
+    @staticmethod
+    def is_account_tag(tag):
+        return tag in ("account", "referenceAccount", "accountFrom", "accountTo")
+
     def parse_entry(self, entry_el):
         els = entry_el.findall("*")
         assert len(els) == 2, len(els)
@@ -430,7 +434,7 @@ class PortfolioPerformanceXML2DB:
             self.el_order += 1
             if event == "start":
                 self.el_stack.append(el.tag)
-                if el.tag in ("security", "account", "accountFrom", "accountTo", "portfolio", "portfolioFrom", "portfolioTo"):
+                if el.tag in ("security", "account", "referenceAccount", "accountFrom", "accountTo", "portfolio", "portfolioFrom", "portfolioTo"):
                     self.cur_xmlid = el.get("id")
                     if self.cur_xmlid is not None:
                         # Real element definition, not reference
@@ -464,7 +468,7 @@ class PortfolioPerformanceXML2DB:
                     self.handle_security(el)
                 elif el.tag == "watchlist":
                     self.handle_watchlist(el)
-                elif el.tag in ("account", "accountFrom", "accountTo"):
+                elif el.tag in ("account", "accountFrom", "accountTo", "referenceAccount"):
                     if el.get("id"):
                         self.handle_account(el, self.el_order)
                     else:
@@ -479,7 +483,7 @@ class PortfolioPerformanceXML2DB:
 
                 elif el.tag == "account-transaction":
                     if el.get("id"):
-                        assert self.uuid2ctr_map[self.cur_uuid()].startswith("account")
+                        assert self.is_account_tag(self.uuid2ctr_map[self.cur_uuid()]), self.uuid2ctr_map[self.cur_uuid()]
                         self.handle_xact("account", self.cur_uuid(), el, self.el_order)
                     else:
                         xmlid = el.get("reference")
@@ -489,7 +493,7 @@ class PortfolioPerformanceXML2DB:
                     if el.get("id"):
                         parent = el.getparent()
                         uuid = self.uuid(parent.find("account"))
-                        assert self.uuid2ctr_map[uuid].startswith("account"), self.uuid2ctr_map[uuid]
+                        assert self.is_account_tag(self.uuid2ctr_map[uuid]), self.uuid2ctr_map[uuid]
                         self.handle_xact("account", uuid, el, 0)
 
                 elif el.tag in ("portfolio-transaction",):
@@ -504,7 +508,7 @@ class PortfolioPerformanceXML2DB:
                     if el.get("id"):
                         parent = el.getparent()
                         uuid = self.uuid(parent.find("portfolio"))
-                        assert self.uuid2ctr_map[uuid] == "portfolio", self.uuid2ctr_map[uuid]
+                        assert self.uuid2ctr_map[uuid].startswith("portfolio"), self.uuid2ctr_map[uuid]
                         self.handle_xact("portfolio", uuid, el, 0)
 
                 elif el.tag == "transactionTo":

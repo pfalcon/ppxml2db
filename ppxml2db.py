@@ -539,7 +539,10 @@ class PortfolioPerformanceXML2DB:
                         else:
                             assert False, "Unexpected crossEntry class: " + parent.get("class")
 
-                        assert self.uuid2ctr_map[uuid].startswith(what), self.uuid2ctr_map[uuid]
+                        if what == "account":
+                            assert self.is_account_tag(self.uuid2ctr_map[uuid]), self.uuid2ctr_map[uuid]
+                        else:
+                            assert self.uuid2ctr_map[uuid].startswith(what), self.uuid2ctr_map[uuid]
                         self.handle_xact(what, uuid, el, 0)
 
                 elif el.tag == "crossEntry":

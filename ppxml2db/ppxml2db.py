@@ -1,16 +1,12 @@
-import sys
 import argparse
-import logging
 from collections import defaultdict
-from pprint import pprint
 import json
 import logging
-import os.path
 
 import lxml.etree as ET
 
-from version import __version__
-import dbhelper
+from .version import __version__
+from . import dbhelper
 
 
 _log = logging.getLogger(__name__)

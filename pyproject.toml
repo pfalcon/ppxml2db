@@ -1,0 +1,15 @@
+[project]
+name = "ppxml2db"
+version = "1.7.0"
+description = "Import Portfolio Performance XML into an SQLite database and vice versa"
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "lxml (>=5.3.0,<6.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

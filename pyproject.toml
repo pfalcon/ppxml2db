@@ -8,6 +8,7 @@ requires-python = ">=3.12"
 dependencies = [
     "lxml (>=5.3.0,<6.0.0)"
 ]
+scripts = { ppxml2db = "ppxml2db.ppxml2db:main", db2ppxml = "ppxml2db.db2ppxml:main" }
 
 
 [build-system]

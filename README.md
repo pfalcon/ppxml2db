@@ -62,14 +62,14 @@ XML variant of PortfolioPerformance, as introduced in PortfolioPerformance
 2. On the "Welcome" page, click "Open the Kommer sample file".
 3. "kommer.xml" will open in a new tab.
 4. In the application menu, choose: File -> Save as -> XML with "id" attributes.
-4. Copy the file to this project's directory for easy access.
-5. Create an empty database with all the needed tables:
+5. Copy the file to this project's directory for easy access.
+6. Create an empty database with all the needed tables:
    `make -B init DB=kommer.db`
-6. Import the XML into the database:
-   `python3 ppxml2db.py kommer.xml kommer.db`
-7. Export the database to a new XML file:
-   `python3 db2ppxml.py kommer.db kommer.xml.out`
-8. Ensure that the new file matches the original character-by-character:
+7. Import the XML into the database:
+   `python3 -m ppxml2db.ppxml2db kommer.xml kommer.db`
+8. Export the database to a new XML file:
+   `python3 -m ppxml2db.db2ppxml kommer.db kommer.xml.out`
+9. Ensure that the new file matches the original character-by-character:
    `diff -u kommer.xml kommer.xml.out`
 
 Now let's do something pretty simple, yet useful, and already something

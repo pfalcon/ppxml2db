@@ -20,7 +20,7 @@ reload-data:
 	rm -f $(DATA)
 	make all
 
-.%: %.sql .create-db
+.%: ppxml2db/setup_scripts/%.sql .create-db
 	-echo "DROP TABLE IF EXISTS $(patsubst .%,%,$@);" | sqlite3 $(DB)
 	sqlite3 $(DB) < $<
 	touch $@
@@ -30,7 +30,7 @@ reload-data:
 	touch $@
 
 clean:
-	-rm -f .[a-z]*
+	-rm -f $(TABLES)
 
 
 # It appears that sqlite3 dump CSV by default with CRLF line endings. Use

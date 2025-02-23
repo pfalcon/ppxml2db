@@ -176,6 +176,7 @@ def make_xact(etree, pel, tag, xact_r):
 
             make_prop(xact, xact_r, "shares")
             make_prop(xact, xact_r, "note")
+            make_prop(xact, xact_r, "source")
 
             unit_rows = dbhelper.select("xact_unit", where="xact='%s'" % xact_r["uuid"])
             if unit_rows:

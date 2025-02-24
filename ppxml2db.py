@@ -600,7 +600,7 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    dbhelper.init(args.db_file)
+    dbhelper.init(args.db_file, True)
 
     with open(args.xml_file, "rb") as f:
         conv = PortfolioPerformanceXML2DB(f)

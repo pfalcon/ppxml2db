@@ -1,5 +1,7 @@
 import logging
+import os
 import sqlite3
+from pathlib import Path
 
 
 LOG_SQL_TO_FILE = 0
@@ -12,13 +14,45 @@ db = None
 sqllog = None
 
 
-def init(dbname):
+def init(dbname, new_db = False):
     global db
-    db = sqlite3.connect(dbname)
+    if new_db:
+        sql_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                "")
+        sql_files = read_sql_files(sql_path)
+        if os.path.exists(dbname):
+            os.remove(dbname)
+        db = sqlite3.connect(dbname)
+        execute_sql_files(db, sql_files)
+    else:
+        db = sqlite3.connect(dbname)
     db.row_factory = sqlite3.Row
     if LOG_SQL_TO_FILE:
         global sqllog
         sqllog = open(dbname + ".sql", "w")
+
+
+def read_sql_files(sql_path):
+    sql_files = {}
+    for filename in os.listdir(sql_path):
+        if filename.endswith(".sql"):
+            with open(os.path.join(sql_path, filename), "r") as file:
+                sql_files[filename] = file.read()
+    # [print(f"{key}: {value}") for key, value in sql_files.items()]
+    return sql_files
+
+
+def execute_sql_files(db, sql_files):
+    # cursor = db.cursor()
+    for filename, sql_content in sql_files.items():
+        try:
+            # cursor.executescript(sql_content)
+            db.executescript(sql_content)
+            # print(f"Executed {filename} successfully")
+        except sqlite3.Error as e:
+            print(f"Error executing {filename}: {e}")
+    db.commit()
+    # db.close()
 
 
 def execute_insert(sql, values = ()):

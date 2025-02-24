@@ -312,7 +312,7 @@ def make_taxonomy_level(etree, pel, level_r):
                 ET.SubElement(d_e, "string").text = d_r["name"]
                 ET.SubElement(d_e, "string").text = d_r["value"]
 
-def main():
+def main0():
     root = ET.Element("client")
     add_xmlid(root)
     etree = ET.ElementTree(root)
@@ -482,7 +482,7 @@ def main():
     custom_dump(root, out)
 
 
-if __name__ == "__main__":
+def main():
     argp = argparse.ArgumentParser(description="Export Sqlite DB to PortfolioPerformance XML file")
     argp.add_argument("db_file", help="input DB file")
     argp.add_argument("xml_file", nargs="?", help="output XML file (stdout if not provided)")
@@ -490,10 +490,15 @@ if __name__ == "__main__":
     argp.add_argument("--xpath", action="store_true", help="use legacy XPath references")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
     argp.add_argument("--version", action="version", version="%(prog)s " + __version__)
+    global args
     args = argp.parse_args()
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
     dbhelper.init(args.db_file)
+    main0()
+
+
+if __name__ == "__main__":
     main()

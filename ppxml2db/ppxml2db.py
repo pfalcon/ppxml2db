@@ -604,3 +604,7 @@ def main():
 
     if not args.dry_run:
         dbhelper.commit()
+
+
+if __name__ == "__main__":
+    main()

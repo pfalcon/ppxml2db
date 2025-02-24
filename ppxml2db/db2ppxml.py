@@ -6,8 +6,8 @@ import json
 
 import lxml.etree as ET
 
-from version import __version__
-import dbhelper
+from .version import __version__
+from . import dbhelper
 
 
 # uuid to #

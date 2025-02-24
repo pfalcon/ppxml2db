@@ -584,7 +584,7 @@ class PortfolioPerformanceXML2DB:
                         el.text = el.tail = None
 
 
-if __name__ == "__main__":
+def main():
     argp = argparse.ArgumentParser(description="Import PortfolioPerformance XML file to Sqlite DB")
     argp.add_argument("xml_file", help="input XML file")
     argp.add_argument("db_file", help="output DB file")

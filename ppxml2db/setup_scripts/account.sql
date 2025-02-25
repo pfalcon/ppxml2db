@@ -10,4 +10,4 @@ _xmlid INT NOT NULL,
 _order INT NOT NULL,
 PRIMARY KEY(uuid)
 );
-#CREATE UNIQUE INDEX account__uuid ON account(uuid);
+-- CREATE UNIQUE INDEX account__uuid ON account(uuid);

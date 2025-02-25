@@ -1,16 +1,12 @@
-import sys
 import argparse
-import logging
 from collections import defaultdict
-from pprint import pprint
 import json
 import logging
-import os.path
 
 import lxml.etree as ET
 
-from version import __version__
-import dbhelper
+from .version import __version__
+from . import dbhelper
 
 
 _log = logging.getLogger(__name__)
@@ -588,7 +584,7 @@ class PortfolioPerformanceXML2DB:
                         el.text = el.tail = None
 
 
-if __name__ == "__main__":
+def main():
     argp = argparse.ArgumentParser(description="Import PortfolioPerformance XML file to Sqlite DB")
     argp.add_argument("xml_file", help="input XML file")
     argp.add_argument("db_file", help="output DB file")
@@ -600,7 +596,7 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    dbhelper.init(args.db_file)
+    dbhelper.init(args.db_file, True)
 
     with open(args.xml_file, "rb") as f:
         conv = PortfolioPerformanceXML2DB(f)
@@ -608,3 +604,7 @@ if __name__ == "__main__":
 
     if not args.dry_run:
         dbhelper.commit()
+
+
+if __name__ == "__main__":
+    main()

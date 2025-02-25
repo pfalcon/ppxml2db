@@ -18,7 +18,7 @@ def init(dbname, new_db = False):
     global db
     if new_db:
         sql_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                "")
+                                "setup_scripts")
         sql_files = read_sql_files(sql_path)
         if os.path.exists(dbname):
             os.remove(dbname)

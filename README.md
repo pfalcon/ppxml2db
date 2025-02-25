@@ -64,9 +64,9 @@ XML variant of PortfolioPerformance, as introduced in PortfolioPerformance
 1. In the application menu, choose: File -> Save as -> XML with "id" attributes.
 1. Copy the file to this project's directory for easy access.
 1. Import the XML into the database:
-   `python3 ppxml2db.py kommer.xml kommer.db`
+   `ppxml2db kommer.xml kommer.db`
 1. Export the database to a new XML file:
-   `python3 db2ppxml.py kommer.db kommer.xml.out`
+   `db2ppxml kommer.db kommer.xml.out`
 1. Ensure that the new file matches the original character-by-character:
    `diff -u kommer.xml kommer.xml.out`
 

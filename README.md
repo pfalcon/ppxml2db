@@ -46,7 +46,13 @@ or next earnings date - possibilities are limitless.
 * `*.sql` - Database schema, one table per file.
 * `ppxml2db.py` - Script to import XML file into a database.
 * `db2ppxml.py` - Script to export database to XML file.
-* `Makefile` - Makefile to create an empty database.
+
+## Installing
+
+The ppxml2db scripts have been packaged with pipx so they can be run without worrying about conflicts.
+
+* Install pipx: https://pipx.pypa.io/stable/installation/ (which requires at least python 3.8)
+* Install ppxml2db eg: `pipx install git+https://github.com/flywire/ppxml2db.git`
 
 ## Example usage
 

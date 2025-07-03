@@ -86,6 +86,12 @@ class PortfolioPerformanceXML2DB:
             if els[1].tag == "limitPrice":
                 fields = self.parse_props(els[1], ("operator", "value"))
                 value = "%s %s" % (fields["operator"], fields["value"])
+            elif els[1].tag == "bookmark":
+                fields = self.parse_props(els[1], ("label", "pattern"))
+                if not fields:
+                    value = None
+                else:
+                    value = json.dumps(fields)
             else:
                 value = els[1].text
             fields = {
@@ -570,7 +576,7 @@ class PortfolioPerformanceXML2DB:
                     preserve = True
                 elif el.tag in ("units", "unit"):
                     preserve = True
-                elif el.tag in ("limitPrice",):
+                elif el.tag in ("limitPrice", "bookmark"):
                     preserve = True
                 elif el.tag in ("map", "entry"):
                     preserve = True

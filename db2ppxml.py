@@ -61,6 +61,12 @@ def make_map(pel, rows):
             op, val = r["value"].split(" ", 1)
             ET.SubElement(el, "operator").text = op
             ET.SubElement(el, "value").text = val
+        elif r["type"] == "bookmark":
+            el = ET.SubElement(enel, r["type"])
+            if r["value"] is not None:
+                subels = json.loads(r["value"])
+                for k, v in subels.items():
+                    ET.SubElement(el, k).text = v
         else:
             ET.SubElement(enel, r["type"]).text = r["value"]
 

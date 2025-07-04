@@ -301,7 +301,16 @@ class PortfolioPerformanceXML2DB:
             fields["item"] = self.uuid(el)
             fields["category"] = level_uuid
             fields["taxonomy"] = taxon_uuid
-            dbhelper.insert("taxonomy_assignment", fields, or_replace=True)
+            id = dbhelper.insert("taxonomy_assignment", fields, or_replace=True)
+            for data_el in as_el.findall("data/entry"):
+                data = self.parse_entry(data_el)
+                fields = {
+                    "assignment": id,
+                    "name": data[0][1],
+                    "type": data[1][0],
+                    "value": data[1][1],
+                }
+                dbhelper.insert("taxonomy_assignment_data", fields, or_replace=True)
 
         for ch_el in level_el.findall("children/classification"):
             self.handle_taxonomy_level(taxon_uuid, level_uuid, ch_el)

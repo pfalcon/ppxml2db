@@ -88,6 +88,13 @@ def make_configuration(pel, conf):
         make_entry(conf_el, k, v)
 
 
+def make_data_entries(pel, data_rows):
+    if data_rows:
+        data = ET.SubElement(pel, "data")
+        for d_r in data_rows:
+            make_entry(data, d_r["name"], d_r["value"], d_r["type"])
+
+
 def security_ref(uuid, levels=4):
     if not args.xpath:
         return uuid2xmlid[uuid]
@@ -307,16 +314,14 @@ def make_taxonomy_level(etree, pel, level_r):
             make_prop(a, a_r, "weight")
             make_prop(a, a_r, "rank")
 
+            data_rows =  dbhelper.select("taxonomy_assignment_data", where="assignment=%d" % a_r["_id"])
+            make_data_entries(a, data_rows)
+
         make_prop(level, level_r, "weight")
         make_prop(level, level_r, "rank")
 
         data_rows = dbhelper.select("taxonomy_data", where="category='%s'" % level_r["uuid"])
-        if data_rows:
-            data = ET.SubElement(level, "data")
-            for d_r in data_rows:
-                d_e = ET.SubElement(data, "entry")
-                ET.SubElement(d_e, "string").text = d_r["name"]
-                ET.SubElement(d_e, d_r["type"]).text = d_r["value"]
+        make_data_entries(level, data_rows)
 
 def main():
     root = ET.Element("client")

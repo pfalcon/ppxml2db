@@ -337,6 +337,7 @@ def main():
         make_prop(sec, sec_r, "onlineId")
         make_prop(sec, sec_r, "name")
         make_prop(sec, sec_r, "currencyCode", "currency")
+        make_prop(sec, sec_r, "targetCurrencyCode", "targetCurrency")
         make_prop(sec, sec_r, "note")
         make_prop(sec, sec_r, "isin")
         make_prop(sec, sec_r, "tickerSymbol")

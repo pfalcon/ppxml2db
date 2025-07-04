@@ -130,13 +130,14 @@ class PortfolioPerformanceXML2DB:
             return
 
         props = [
-            "uuid", "onlineId", "name", "currencyCode", "note",
+            "uuid", "onlineId", "name", "currencyCode", "targetCurrencyCode", "note",
             "isin", "tickerSymbol", "calendar", "wkn", "feedTickerSymbol",
             "feed", "feedURL", "latestFeed", "latestFeedURL",
             ("isRetired", as_bool), "updatedAt"
         ]
         sec = self.parse_props(el, props)
         ren(sec, "currencyCode", "currency")
+        ren(sec, "targetCurrencyCode", "targetCurrency")
         dbhelper.insert("security", sec, or_replace=True)
 
         for fields in self.parse_attributes(el):

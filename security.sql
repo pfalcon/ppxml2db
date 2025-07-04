@@ -4,6 +4,7 @@ onlineId VARCHAR(64),
 name VARCHAR(128),
 -- Yes, can be absent (dax.xml).
 currency VARCHAR(16),
+targetCurrency VARCHAR(16),
 note TEXT,
 isin VARCHAR(16),
 tickerSymbol VARCHAR(32),

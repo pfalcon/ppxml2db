@@ -316,7 +316,7 @@ def make_taxonomy_level(etree, pel, level_r):
             for d_r in data_rows:
                 d_e = ET.SubElement(data, "entry")
                 ET.SubElement(d_e, "string").text = d_r["name"]
-                ET.SubElement(d_e, "string").text = d_r["value"]
+                ET.SubElement(d_e, d_r["type"]).text = d_r["value"]
 
 def main():
     root = ET.Element("client")

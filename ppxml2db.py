@@ -286,6 +286,7 @@ class PortfolioPerformanceXML2DB:
             data = self.parse_entry(data_el)
             fields = {
                 "name": data[0][1],
+                "type": data[1][0],
                 "value": data[1][1],
                 "category": level_uuid,
                 "taxonomy": taxon_uuid,

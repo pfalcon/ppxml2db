@@ -192,7 +192,18 @@ class PortfolioPerformanceXML2DB:
             am_el = unit_el.find("amount")
             units_dict[unit_el.get("type")] += int(am_el.get("amount"))
 
-        props = ["uuid", "date", "currencyCode", "amount", "shares", "note", "source", "updatedAt", "type", "id"]
+        props = [
+            "uuid",
+            "date",
+            "currencyCode",
+            "amount",
+            "shares",
+            "note",
+            "source",
+            "updatedAt",
+            "type",
+            "id",
+        ]
         fields = self.parse_props(el, props)
         ren(fields, "currencyCode", "currency")
         ren(fields, "id", "_xmlid")

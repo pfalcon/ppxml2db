@@ -106,9 +106,6 @@ class ET:
 def add_xmlid(el, uuid=None):
     global xml_id
 
-    if args.xpath:
-        return
-
     xml_id += 1
     el.attrib["id"] = str(xml_id)
     if uuid is not None:
@@ -184,39 +181,19 @@ def make_data_entries(pel, data_rows):
 
 
 def security_ref(uuid, levels=4):
-    if not args.xpath:
-        return uuid2xmlid[uuid]
-
-    ref = "../" * levels + "securities/security"
-    i = sec_map[uuid]
-    if i != 0:
-        ref += "[%d]" % (i + 1)
-    return ref
+    return uuid2xmlid[uuid]
 
 
 def make_ref(etree, el, to_el):
-    if not args.xpath:
-        el.set("reference", to_el.get("id"))
-        return
-
-    rel_path = os.path.relpath(etree.getelementpath(to_el), etree.getelementpath(el))
-    rel_path = rel_path.replace("[1]", "")
-    # Workaround for Windows.
-    rel_path = rel_path.replace("\\", "/")
-    el.set("reference", rel_path)
+    el.set("reference", to_el.get("id"))
 
 
 def try_ref(etree, el, uuid):
-    if not args.xpath:
-        if uuid in uuid2xmlid:
-            el.set("reference", uuid2xmlid[uuid])
-            el.wr_nb()
-            return True
-        return False
-
-    if uuid in output_els:
-        make_ref(etree, el, output_els[uuid])
+    if uuid in uuid2xmlid:
+        el.set("reference", uuid2xmlid[uuid])
+        el.wr_nb()
         return True
+    return False
 
 
 def make_xact(etree, pel, tag, xact_r):
@@ -622,7 +599,6 @@ if __name__ == "__main__":
     argp.add_argument("db_file", help="input DB file")
     argp.add_argument("xml_file", nargs="?", help="output XML file (stdout if not provided)")
     argp.add_argument("--sort-events", action="store_true", help="sort events by date (then description)")
-    argp.add_argument("--xpath", action="store_true", help="use legacy XPath references")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
     argp.add_argument("--version", action="version", version="%(prog)s " + __version__)
     args = argp.parse_args()

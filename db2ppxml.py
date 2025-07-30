@@ -4,8 +4,6 @@ import logging
 import os.path
 import json
 
-import lxml.etree as ET
-
 from version import __version__
 import dbhelper
 
@@ -21,6 +19,88 @@ cross_els = {}
 
 xml_id = 0
 uuid2xmlid = {}
+
+out = None
+
+
+class ET_SubElement:
+
+    def __init__(self, parent, tag):
+        if parent is None:
+            self._indent = 0
+        else:
+            self._indent = parent._indent + 1
+            if not parent.start_written:
+                parent.wr_start()
+        self.tag = tag
+        self.attrib = {}
+        self.start_written = False
+
+    def get(self, attr):
+        return self.attrib[attr]
+
+    def set(self, attr, val):
+        self.attrib[attr] = val
+
+    def indent(self):
+        global out
+        if self._indent:
+            out.write("\n" + "  " * self._indent)
+
+    def _wr_start(self, end):
+        global out
+        self.indent()
+        out.write("<%s" % self.tag)
+        for k, v in self.attrib.items():
+            out.write(' %s="%s"' % (k, v))
+        out.write(end)
+        self.start_written = True
+
+    def wr_start(self):
+        self._wr_start(">")
+
+    def wr_nb(self):
+        self._wr_start("/>")
+
+    def wr_end(self, indent=True):
+        global out
+        if not self.start_written:
+            self.wr_nb()
+            return
+
+        if indent:
+            self.indent()
+            # Still need to indent top closing tag
+            if self._indent == 0:
+                out.write("\n")
+        out.write("</%s>" % self.tag)
+
+    @property
+    def text(self):
+        raise NotImplementedError
+
+    @text.setter
+    def text(self, txt):
+        global out
+        if txt is None:
+            self.wr_nb()
+        else:
+            self.wr_start()
+            out.write(quote_text(txt))
+            self.wr_end(False)
+
+
+def ET_Element(tag):
+    return ET_SubElement(None, tag)
+
+
+# Initial version of this script used lxml.etree (ET) and built a DOM tree
+# in memory. But that had poor scalability to large files, so it was rewritten
+# using adhoc object mimicking ET API, but writing out most of object content
+# to stream eagerly and not keeping unneeded objects in memory.
+class ET:
+    Element = ET_Element
+    SubElement = ET_SubElement
 
 
 def add_xmlid(el, uuid=None):
@@ -61,31 +141,38 @@ def make_map(pel, rows):
             op, val = r["value"].split(" ", 1)
             ET.SubElement(el, "operator").text = op
             ET.SubElement(el, "value").text = val
+            el.wr_end()
         elif r["type"] == "bookmark":
             el = ET.SubElement(enel, r["type"])
             if r["value"] is not None:
                 subels = json.loads(r["value"])
                 for k, v in subels.items():
                     ET.SubElement(el, k).text = v
+            el.wr_end()
         else:
             ET.SubElement(enel, r["type"]).text = r["value"]
+        enel.wr_end()
+    mapel.wr_end()
 
 
 def make_attributes(pel, rows):
     attributes = ET.SubElement(pel, "attributes")
     make_map(attributes, rows)
+    attributes.wr_end()
 
 
 def make_entry(pel, k, v, type="string"):
     e = ET.SubElement(pel, "entry")
     ET.SubElement(e, "string").text = k
     ET.SubElement(e, type).text = v
+    e.wr_end()
 
 
 def make_configuration(pel, conf):
     conf_el = ET.SubElement(pel, "configuration")
     for k, v in conf.items():
         make_entry(conf_el, k, v)
+    conf_el.wr_end()
 
 
 def make_data_entries(pel, data_rows):
@@ -93,6 +180,7 @@ def make_data_entries(pel, data_rows):
         data = ET.SubElement(pel, "data")
         for d_r in data_rows:
             make_entry(data, d_r["name"], d_r["value"], d_r["type"])
+        data.wr_end()
 
 
 def security_ref(uuid, levels=4):
@@ -122,6 +210,7 @@ def try_ref(etree, el, uuid):
     if not args.xpath:
         if uuid in uuid2xmlid:
             el.set("reference", uuid2xmlid[uuid])
+            el.wr_nb()
             return True
         return False
 
@@ -156,6 +245,7 @@ def make_xact(etree, pel, tag, xact_r):
                 existing_x = cross_els.get(cross_key)
                 if existing_x is not None:
                     make_ref(etree, x, existing_x)
+                    x.wr_nb()
                     continue
                 add_xmlid(x)
                 cross_els[cross_key] = x
@@ -186,6 +276,7 @@ def make_xact(etree, pel, tag, xact_r):
                     make_account(etree, x, acc_r)
                     acc_xact_r = dbhelper.select("xact", where="uuid='%s'" % x_r["to_xact"])[0]
                     make_xact(etree, x, "accountTransaction", acc_xact_r)
+                x.wr_end()
 
             make_prop(xact, xact_r, "shares")
             make_prop(xact, xact_r, "note")
@@ -200,15 +291,21 @@ def make_xact(etree, pel, tag, xact_r):
                     a = ET.SubElement(u, "amount")
                     a.set("currency", unit_r["currency"])
                     a.set("amount", str(unit_r["amount"]))
+                    a.wr_nb()
                     if unit_r["forex_amount"] is not None or unit_r["forex_currency"] is not None:
                         forex = ET.SubElement(u, "forex")
                         forex.set("currency", unit_r["forex_currency"])
                         forex.set("amount", str(unit_r["forex_amount"]))
+                        forex.wr_nb()
                         forex = ET.SubElement(u, "exchangeRate")
                         forex.text = str(unit_r["exchangeRate"])
+                    u.wr_end()
+                units.wr_end()
 
             make_prop(xact, xact_r, "updatedAt")
             make_prop(xact, xact_r, "type")
+
+            xact.wr_end()
 
 
 def make_xacts(etree, pel, acc_uuid):
@@ -232,11 +329,13 @@ def make_portfolio(etree, pel, uuid, el_name="portfolio"):
 
         xacts = ET.SubElement(el, "transactions")
         make_xacts(etree, xacts, port_r["uuid"])
+        xacts.wr_end()
 
         attr_rows = dbhelper.select("account_attr", where="account='%s'" % port_r["uuid"], order="seq")
         make_attributes(el, attr_rows)
 
         make_prop(el, port_r, "updatedAt")
+        el.wr_end()
 
 
 def make_account(etree, pel, acc_r, el_name="account"):
@@ -252,11 +351,13 @@ def make_account(etree, pel, acc_r, el_name="account"):
 
         xacts = ET.SubElement(acc, "transactions")
         make_xacts(etree, xacts, acc_r["uuid"])
+        xacts.wr_end()
 
         attr_rows = dbhelper.select("account_attr", where="account='%s'" % acc_r["uuid"], order="seq")
         make_attributes(acc, attr_rows)
 
         make_prop(acc, acc_r, "updatedAt")
+        acc.wr_end()
 
 
 def quote_text(s):
@@ -270,23 +371,6 @@ def quote_text(s):
     for p, r in pats:
         s = s.replace(p, r)
     return s
-
-
-def custom_dump(el, stream):
-    stream.write("<%s" % el.tag)
-    for k, v in el.attrib.items():
-        stream.write(' %s="%s"' % (k, v))
-    if el.text is None and not len(el):
-        stream.write("/>")
-    else:
-        stream.write(">")
-        if el.text:
-            stream.write(quote_text(el.text))
-        for ch in el:
-            custom_dump(ch, stream)
-        stream.write("</%s>" % el.tag)
-    if el.tail:
-        stream.write(el.tail)
 
 
 def make_taxonomy_level(etree, pel, level_r):
@@ -304,6 +388,7 @@ def make_taxonomy_level(etree, pel, level_r):
         chds = ET.SubElement(level, "children")
         for e_r in dbhelper.select("taxonomy_category", where="parent='%s'" % level_r["uuid"]):
             make_taxonomy_level(etree, chds, e_r)
+        chds.wr_end()
 
         assgn = ET.SubElement(level, "assignments")
         for a_r in dbhelper.select("taxonomy_assignment", where="category='%s'" % level_r["uuid"]):
@@ -316,17 +401,26 @@ def make_taxonomy_level(etree, pel, level_r):
 
             data_rows =  dbhelper.select("taxonomy_assignment_data", where="assignment=%d" % a_r["_id"])
             make_data_entries(a, data_rows)
+            a.wr_end()
+        assgn.wr_end()
 
         make_prop(level, level_r, "weight")
         make_prop(level, level_r, "rank")
 
         data_rows = dbhelper.select("taxonomy_data", where="category='%s'" % level_r["uuid"])
         make_data_entries(level, data_rows)
+        level.wr_end()
+
 
 def main():
+    global out
+    out = sys.stdout
+    if args.xml_file:
+        out = open(args.xml_file, "w", encoding="utf-8", newline="\n")
+
     root = ET.Element("client")
     add_xmlid(root)
-    etree = ET.ElementTree(root)
+    etree = None
     for n in ["version", "baseCurrency"]:
         row = dbhelper.select("property", where="name='%s'" % n)[0]
         ET.SubElement(root, n).text = row["value"]
@@ -357,6 +451,8 @@ def main():
             p = ET.SubElement(prices, "price")
             p.set("t", price_r["tstamp"])
             p.set("v", str(price_r["value"]))
+            p.wr_nb()
+        prices.wr_end()
 
         make_prop(sec, sec_r, "latestFeed")
         make_prop(sec, sec_r, "latestFeedURL")
@@ -369,6 +465,7 @@ def main():
             make_prop(latest, latest_r, "high")
             make_prop(latest, latest_r, "low")
             make_prop(latest, latest_r, "volume")
+            latest.wr_end()
 
         attr_rows = dbhelper.select("security_attr", where="security='%s'" % sec_r["uuid"], order="seq")
         make_attributes(sec, attr_rows)
@@ -382,6 +479,8 @@ def main():
             make_prop(event, event_r, "date")
             make_prop(event, event_r, "type")
             make_prop(event, event_r, "details")
+            event.wr_end()
+        events.wr_end()
 
         for prop_r in dbhelper.select("security_prop", where="security='%s'" % sec_r["uuid"], order="seq"):
             p = ET.SubElement(sec, "property")
@@ -391,6 +490,8 @@ def main():
 
         make_prop(sec, sec_r, "isRetired", conv=as_bool)
         make_prop(sec, sec_r, "updatedAt")
+        sec.wr_end()
+    securities.wr_end()
 
     watchlists = ET.SubElement(root, "watchlists")
     for wlist_r in dbhelper.select("watchlist"):
@@ -400,17 +501,23 @@ def main():
         for wlist_sec_r in dbhelper.select("watchlist_security", where="list=%d" % wlist_r["_id"]):
             s = ET.SubElement(secs, "security")
             s.set("reference", security_ref(wlist_sec_r["security"]))
+            s.wr_nb()
+        secs.wr_end()
+        wlist.wr_end()
+    watchlists.wr_end()
 
     accounts = ET.SubElement(root, "accounts")
     for acc_r in dbhelper.select("account", where="type='account'", order="_order"):
         make_account(etree, accounts, acc_r)
+    accounts.wr_end()
 
     portfolios = ET.SubElement(root, "portfolios")
     for acc_r in dbhelper.select("account", where="type='portfolio'", order="_order"):
         make_portfolio(etree, portfolios, acc_r["uuid"])
+    portfolios.wr_end()
 
     plans = ET.SubElement(root, "plans")
-
+    plans.wr_end()
 
     taxonomies = ET.SubElement(root, "taxonomies")
     for taxon_r in dbhelper.select("taxonomy"):
@@ -422,8 +529,11 @@ def main():
             el = ET.SubElement(taxon, "dimensions")
             for taxon_dim_r in taxon_dim_rows:
                 ET.SubElement(el, "string").text = taxon_dim_r["value"]
+            el.wr_end()
         e_r = dbhelper.select("taxonomy_category", where="uuid='%s'" % taxon_r["root"])[0]
         make_taxonomy_level(etree, taxon, e_r)
+        taxon.wr_end()
+    taxonomies.wr_end()
 
 
     dashboards = ET.SubElement(root, "dashboards")
@@ -443,11 +553,18 @@ def main():
                 make_prop(wid, wid_j, "label")
                 if "config" in wid_j:
                     make_configuration(wid, wid_j["config"])
+                wid.wr_end()
+            widgets.wr_end()
+            col.wr_end()
+        columns.wr_end()
+        dashb.wr_end()
+    dashboards.wr_end()
 
 
     properties = ET.SubElement(root, "properties")
     for prop_r in dbhelper.select("property", where="special=0"):
         make_entry(properties, prop_r["name"], prop_r["value"])
+    properties.wr_end()
 
     settings = ET.SubElement(root, "settings")
 
@@ -456,6 +573,8 @@ def main():
         bmark = ET.SubElement(bookmarks, "bookmark")
         make_prop(bmark, bmark_r, "label")
         make_prop(bmark, bmark_r, "pattern")
+        bmark.wr_end()
+    bookmarks.wr_end()
 
     attrtypes = ET.SubElement(settings, "attributeTypes")
     for attr_type_r in dbhelper.select("attribute_type"):
@@ -472,26 +591,30 @@ def main():
             props = ET.SubElement(attr_type, "properties")
             for p in prop_list:
                 make_entry(props, p["name"], p["value"], type=p["type"])
+            props.wr_end()
+        attr_type.wr_end()
+    attrtypes.wr_end()
 
     config_sets = ET.SubElement(settings, "configurationSets")
     for cset_r in dbhelper.select("config_set"):
         el = ET.SubElement(config_sets, "entry")
         make_prop(el, cset_r, "string", "name")
-        el = ET.SubElement(el, "config-set")
-        el = ET.SubElement(el, "configurations")
+        el2 = ET.SubElement(el, "config-set")
+        el3 = ET.SubElement(el2, "configurations")
         for centry_r in dbhelper.select("config_entry", where="config_set=%d" % cset_r["_id"]):
-            centry = ET.SubElement(el, "config")
+            centry = ET.SubElement(el3, "config")
             make_prop(centry, centry_r, "uuid")
             make_prop(centry, centry_r, "name")
             make_prop(centry, centry_r, "data")
+            centry.wr_end()
+        el3.wr_end()
+        el2.wr_end()
+        el.wr_end()
+    config_sets.wr_end()
 
+    settings.wr_end()
 
-    ET.indent(root)
-    #ET.dump(root)
-    out = sys.stdout
-    if args.xml_file:
-        out = open(args.xml_file, "w", encoding="utf-8", newline="\n")
-    custom_dump(root, out)
+    root.wr_end()
 
 
 if __name__ == "__main__":

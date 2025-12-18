@@ -158,7 +158,7 @@ class PortfolioPerformanceXML2DB:
             dbhelper.insert("account_attr", fields, or_replace=True)
 
     def handle_account(self, el, orderno):
-        props = ["uuid", "name", "currencyCode", ("isRetired", as_bool), "updatedAt", "id"]
+        props = ["uuid", "name", "currencyCode", "note", ("isRetired", as_bool), "updatedAt", "id"]
         fields = self.parse_props(el, props)
         ren(fields, "currencyCode", "currency")
         ren(fields, "id", "_xmlid")
@@ -168,7 +168,7 @@ class PortfolioPerformanceXML2DB:
         self.handle_account_attrs(el, fields["uuid"])
 
     def handle_portfolio(self, el, orderno):
-        props = ["uuid", "name", ("isRetired", as_bool), "updatedAt", "id"]
+        props = ["uuid", "name", "note", ("isRetired", as_bool), "updatedAt", "id"]
         fields = self.parse_props(el, props)
         ren(fields, "id", "_xmlid")
         acc = el.find("referenceAccount")

@@ -324,6 +324,7 @@ def make_account(etree, pel, acc_r, el_name="account"):
         make_prop(acc, acc_r, "uuid")
         make_prop(acc, acc_r, "name")
         make_prop(acc, acc_r, "currencyCode", "currency")
+        make_prop(acc, acc_r, "note")
         make_prop(acc, acc_r, "isRetired", conv=as_bool)
 
         xacts = ET.SubElement(acc, "transactions")

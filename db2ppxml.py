@@ -570,6 +570,9 @@ def main():
             for p in prop_list:
                 make_entry(props, p["name"], p["value"], type=p["type"])
             props.wr_end()
+        elif attr_type_r["type"].rsplit(".", 1)[1] in ("LimitPrice",):
+            props = ET.SubElement(attr_type, "properties")
+            props.wr_end()
         attr_type.wr_end()
     attrtypes.wr_end()
 

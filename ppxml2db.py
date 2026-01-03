@@ -108,7 +108,7 @@ class PortfolioPerformanceXML2DB:
             ren(price_fields, "v", "value")
             ren(price_fields, "t", "tstamp")
             price_fields["security"] = self.cur_uuid()
-            dbhelper.insert("price", price_fields, or_replace=True)
+            dbhelper.insert("price", price_fields)
 
     def handle_latest(self, latest_el):
         if latest_el is not None:
@@ -117,7 +117,7 @@ class PortfolioPerformanceXML2DB:
             ren(latest_fields, "v", "value")
             ren(latest_fields, "t", "tstamp")
             latest_fields["security"] = self.cur_uuid()
-            dbhelper.insert("latest_price", latest_fields, or_replace=True)
+            dbhelper.insert("latest_price", latest_fields)
 
     def handle_event(self, event_el):
             props = ["date", "type", "details"]
@@ -138,11 +138,11 @@ class PortfolioPerformanceXML2DB:
         sec = self.parse_props(el, props)
         ren(sec, "currencyCode", "currency")
         ren(sec, "targetCurrencyCode", "targetCurrency")
-        dbhelper.insert("security", sec, or_replace=True)
+        dbhelper.insert("security", sec)
 
         for fields in self.parse_attributes(el):
             fields["security"] = sec["uuid"]
-            dbhelper.insert("security_attr", fields, or_replace=True)
+            dbhelper.insert("security_attr", fields)
 
         prop_els = el.findall("property")
         for seq, prop_el in enumerate(prop_els):
@@ -150,12 +150,12 @@ class PortfolioPerformanceXML2DB:
                 "security": sec["uuid"], "type": prop_el.get("type"),
                 "name": prop_el.get("name"), "value": prop_el.text, "seq": seq,
             }
-            dbhelper.insert("security_prop", fields, or_replace=True)
+            dbhelper.insert("security_prop", fields)
 
     def handle_account_attrs(self, pel, uuid):
         for fields in self.parse_attributes(pel):
             fields["account"] = uuid
-            dbhelper.insert("account_attr", fields, or_replace=True)
+            dbhelper.insert("account_attr", fields)
 
     def handle_account(self, el, orderno):
         props = ["uuid", "name", "currencyCode", "note", ("isRetired", as_bool), "updatedAt", "id"]
@@ -164,7 +164,7 @@ class PortfolioPerformanceXML2DB:
         ren(fields, "id", "_xmlid")
         fields["type"] = "account"
         fields["_order"] = orderno
-        dbhelper.insert("account", fields, or_replace=True)
+        dbhelper.insert("account", fields)
         self.handle_account_attrs(el, fields["uuid"])
 
     def handle_portfolio(self, el, orderno):
@@ -175,15 +175,15 @@ class PortfolioPerformanceXML2DB:
         fields["referenceAccount"] = self.uuid(acc)
         fields["type"] = "portfolio"
         fields["_order"] = orderno
-        dbhelper.insert("account", fields, or_replace=True)
+        dbhelper.insert("account", fields)
         self.handle_account_attrs(el, fields["uuid"])
 
     def handle_watchlist(self, el):
         fields = self.parse_props(el, ["name"])
-        id = dbhelper.insert("watchlist", fields, or_replace=True)
+        id = dbhelper.insert("watchlist", fields)
         for sec in el.findall("securities/security"):
             fields = {"list": id, "security": self.uuid(sec)}
-            dbhelper.insert("watchlist_security", fields, or_replace=True)
+            dbhelper.insert("watchlist_security", fields)
 
     def handle_xact(self, acc_type, acc_uuid, el, orderno):
         # Start with calculating unit aggregates, to add to xact row in DB.
@@ -215,7 +215,7 @@ class PortfolioPerformanceXML2DB:
             fields["security"] = self.uuid(sec)
         fields["fees"] = units_dict["FEE"]
         fields["taxes"] = units_dict["TAX"]
-        dbhelper.insert("xact", fields, or_replace=True)
+        dbhelper.insert("xact", fields)
 
         xact_uuid = fields["uuid"]
         for unit_el in el.findall("units/unit"):
@@ -233,7 +233,7 @@ class PortfolioPerformanceXML2DB:
             rate_el = unit_el.find("exchangeRate")
             if rate_el is not None:
                 fields["exchangeRate"] = rate_el.text
-            dbhelper.insert("xact_unit", fields, or_replace=True)
+            dbhelper.insert("xact_unit", fields)
 
     def handle_crossEntry(self, x_el):
             if x_el.get("reference") is not None:
@@ -266,7 +266,7 @@ class PortfolioPerformanceXML2DB:
                 }
             else:
                 raise NotImplementedError(typ)
-            dbhelper.insert("xact_cross_entry", fields, or_replace=True)
+            dbhelper.insert("xact_cross_entry", fields)
 
     def handle_taxonomy(self, taxon_el):
             props = ["id", "name"]
@@ -278,10 +278,10 @@ class PortfolioPerformanceXML2DB:
                     "name": "dimension",
                     "value": dim_els.text,
                 }
-                dbhelper.insert("taxonomy_data", dim_fields, or_replace=True)
+                dbhelper.insert("taxonomy_data", dim_fields)
             root_el = taxon_el.find("root")
             fields["root"] = self.uuid(root_el)
-            dbhelper.insert("taxonomy", fields, or_replace=True)
+            dbhelper.insert("taxonomy", fields)
             self.handle_taxonomy_level(fields["uuid"], None, root_el)
 
     def handle_taxonomy_level(self, taxon_uuid, parent_uuid, level_el):
@@ -291,7 +291,7 @@ class PortfolioPerformanceXML2DB:
         fields["parent"] = parent_uuid
         fields["taxonomy"] = taxon_uuid
         level_uuid = fields["uuid"]
-        dbhelper.insert("taxonomy_category", fields, or_replace=True)
+        dbhelper.insert("taxonomy_category", fields)
 
         for data_el in level_el.findall("data/entry"):
             data = self.parse_entry(data_el)
@@ -302,7 +302,7 @@ class PortfolioPerformanceXML2DB:
                 "category": level_uuid,
                 "taxonomy": taxon_uuid,
             }
-            dbhelper.insert("taxonomy_data", fields, or_replace=True)
+            dbhelper.insert("taxonomy_data", fields)
 
         for as_el in level_el.findall("assignments/assignment"):
             props = ["weight", "rank"]
@@ -312,7 +312,7 @@ class PortfolioPerformanceXML2DB:
             fields["item"] = self.uuid(el)
             fields["category"] = level_uuid
             fields["taxonomy"] = taxon_uuid
-            id = dbhelper.insert("taxonomy_assignment", fields, or_replace=True)
+            id = dbhelper.insert("taxonomy_assignment", fields)
             for data_el in as_el.findall("data/entry"):
                 data = self.parse_entry(data_el)
                 fields = {
@@ -321,7 +321,7 @@ class PortfolioPerformanceXML2DB:
                     "type": data[1][0],
                     "value": data[1][1],
                 }
-                dbhelper.insert("taxonomy_assignment_data", fields, or_replace=True)
+                dbhelper.insert("taxonomy_assignment_data", fields)
 
         for ch_el in level_el.findall("children/classification"):
             self.handle_taxonomy_level(taxon_uuid, level_uuid, ch_el)
@@ -346,13 +346,13 @@ class PortfolioPerformanceXML2DB:
                     col_fields["widgets"].append(wid_fields)
                 columns.append(col_fields)
             fields["columns_json"] = json.dumps(columns)
-            dbhelper.insert("dashboard", fields, or_replace=True)
+            dbhelper.insert("dashboard", fields)
 
     def handle_settings(self, settings_el):
         for bmark_el in settings_el.findall("bookmarks/bookmark"):
             props = ["label", "pattern"]
             fields = self.parse_props(bmark_el, props)
-            dbhelper.insert("bookmark", fields, or_replace=True)
+            dbhelper.insert("bookmark", fields)
 
         for attr_type_el in settings_el.findall("attributeTypes/attribute-type"):
             props = ["id", "name", "columnLabel", "source", "target", "type", "converterClass"]
@@ -361,18 +361,18 @@ class PortfolioPerformanceXML2DB:
             for p in self.parse_attributes(attr_type_el, "properties"):
                 props.append({"name": p["attr_uuid"], "type": p["type"], "value": p["value"]})
             fields["props_json"] = json.dumps(props)
-            dbhelper.insert("attribute_type", fields, or_replace=True)
+            dbhelper.insert("attribute_type", fields)
 
         for config_set_el in settings_el.findall("configurationSets/entry"):
             props = ["string"]
             fields = self.parse_props(config_set_el, props)
             ren(fields, "string", "name")
-            cset_id = dbhelper.insert("config_set", fields, or_replace=True)
+            cset_id = dbhelper.insert("config_set", fields)
             for config_e_el in config_set_el.findall("config-set/configurations/config"):
                 props = ["uuid", "name", "data"]
                 fields = self.parse_props(config_e_el, props)
                 fields["config_set"] = cset_id
-                dbhelper.insert("config_entry", fields, or_replace=True)
+                dbhelper.insert("config_entry", fields)
 
     def handle_toplevel_properties(self, el):
         for prop_el in el.findall("entry"):
@@ -380,13 +380,13 @@ class PortfolioPerformanceXML2DB:
             assert d[0][0] == "string"
             assert d[1][0] == "string"
             fields = {"name": d[0][1], "value": d[1][1]}
-            dbhelper.insert("property", fields, or_replace=True)
+            dbhelper.insert("property", fields)
 
     def handle_client(self, el):
         props = ["version", "baseCurrency"]
         fields = self.parse_props(el, props)
         for n in props:
-            dbhelper.insert("property", {"name": n, "value": fields[n], "special": 1}, or_replace=True)
+            dbhelper.insert("property", {"name": n, "value": fields[n], "special": 1})
 
     def __init__(self, xml):
         self.xml = xml
@@ -396,7 +396,7 @@ class PortfolioPerformanceXML2DB:
         props = ["version", "baseCurrency"]
         fields = self.parse_props(self.etree, props)
         for n in props:
-            dbhelper.insert("property", {"name": n, "value": fields[n], "special": 1}, or_replace=True)
+            dbhelper.insert("property", {"name": n, "value": fields[n], "special": 1})
 
         _log.info("Handling <security>")
         security_els = self.etree.findall("securities/security")

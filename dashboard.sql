@@ -1,8 +1,7 @@
 CREATE TABLE dashboard(
-_id INTEGER NOT NULL,
+_id INTEGER NOT NULL PRIMARY KEY,
 id VARCHAR(64) NOT NULL,
 name VARCHAR(64) NOT NULL,
 config_json TEXT NOT NULL,
-columns_json TEXT NOT NULL,
-PRIMARY KEY(_id)
+columns_json TEXT NOT NULL
 );

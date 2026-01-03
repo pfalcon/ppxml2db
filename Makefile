@@ -1,4 +1,5 @@
 PYTHON = python3
+DBTOOL = sqlite3
 DB = pp.db
 TABLES = .account .account_attr \
     .security .security_attr .security_event .security_prop .latest_price .price \
@@ -21,8 +22,8 @@ reload-data:
 	make all
 
 .%: %.sql .create-db
-	-echo "DROP TABLE IF EXISTS $(patsubst .%,%,$@);" | sqlite3 $(DB)
-	sqlite3 $(DB) < $<
+	-echo "DROP TABLE IF EXISTS $(patsubst .%,%,$@);" | $(DBTOOL) $(DB)
+	$(DBTOOL) $(DB) < $<
 	touch $@
 
 .create-db: 

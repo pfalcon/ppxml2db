@@ -1,9 +1,9 @@
 CREATE TABLE xact_unit(
 xact VARCHAR(36) NOT NULL REFERENCES xact(uuid),
 type VARCHAR(16) NOT NULL,
-amount INT NOT NULL,
+amount BIGINT NOT NULL,
 currency VARCHAR(16) NOT NULL,
-forex_amount INT,
+forex_amount BIGINT,
 forex_currency VARCHAR(16),
 -- In PP, exchangeRate is arbitrary-precision float, so we store it as a
 -- string (actually, Sqlite is known to ignore the column type and use

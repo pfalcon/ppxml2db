@@ -180,7 +180,7 @@ class PortfolioPerformanceXML2DB:
 
     def handle_watchlist(self, el):
         fields = self.parse_props(el, ["name"])
-        id = dbhelper.insert("watchlist", fields)
+        id = dbhelper.insert("watchlist", fields, returning="_id")
         for sec in el.findall("securities/security"):
             fields = {"list": id, "security": self.uuid(sec)}
             dbhelper.insert("watchlist_security", fields)
@@ -312,7 +312,7 @@ class PortfolioPerformanceXML2DB:
             fields["item"] = self.uuid(el)
             fields["category"] = level_uuid
             fields["taxonomy"] = taxon_uuid
-            id = dbhelper.insert("taxonomy_assignment", fields)
+            id = dbhelper.insert("taxonomy_assignment", fields, returning="_id")
             for data_el in as_el.findall("data/entry"):
                 data = self.parse_entry(data_el)
                 fields = {
@@ -367,7 +367,7 @@ class PortfolioPerformanceXML2DB:
             props = ["string"]
             fields = self.parse_props(config_set_el, props)
             ren(fields, "string", "name")
-            cset_id = dbhelper.insert("config_set", fields)
+            cset_id = dbhelper.insert("config_set", fields, returning="_id")
             for config_e_el in config_set_el.findall("config-set/configurations/config"):
                 props = ["uuid", "name", "data"]
                 fields = self.parse_props(config_e_el, props)

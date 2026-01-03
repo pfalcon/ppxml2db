@@ -21,7 +21,9 @@ def init(dbname):
         sqllog = open(dbname + ".sql", "w")
 
 
-def execute_dml(sql, values = ()):
+def execute_dml(sql, values = (), returning=None):
+    if returning:
+        sql += " RETURNING " + returning
     if LOG_SQL_TO_FILE:
         sqllog.write("%s %s\n" % (sql, values))
         return
@@ -31,7 +33,7 @@ def execute_dml(sql, values = ()):
     return cursor.lastrowid
 
 
-def insert(table, fields=None, or_replace=False, **kw):
+def insert(table, fields=None, or_replace=False, returning=None, **kw):
     repl_clause = ""
     if or_replace:
         repl_clause = " OR REPLACE"
@@ -45,7 +47,7 @@ def insert(table, fields=None, or_replace=False, **kw):
         field_vals.append(v)
         qmarks.append("?")
     sql = "INSERT%s INTO %s(%s) VALUES (%s)" % (repl_clause, table, ", ".join(field_names), ", ".join(qmarks))
-    id = execute_dml(sql, field_vals)
+    id = execute_dml(sql, field_vals, returning)
     return id
 
 

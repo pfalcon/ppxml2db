@@ -1,7 +1,7 @@
 CREATE TABLE security(
 uuid VARCHAR(36) NOT NULL,
 onlineId VARCHAR(64),
-name VARCHAR(128),
+name VARCHAR(255),
 -- Yes, can be absent (dax.xml).
 currency VARCHAR(16),
 targetCurrency VARCHAR(16),

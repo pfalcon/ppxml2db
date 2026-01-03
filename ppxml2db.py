@@ -486,7 +486,8 @@ class PortfolioPerformanceXML2DB:
                     self.id2uuid_map[self.cur_xmlid] = el.text
 
                 elif el.tag == "price":
-                    self.handle_price(el)
+                    if not args.skip_prices:
+                        self.handle_price(el)
                 elif el.tag == "latest":
                     self.handle_latest(el)
                 elif el.tag == "event":
@@ -622,6 +623,7 @@ if __name__ == "__main__":
     argp.add_argument("db_file", help="output DB file")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
     argp.add_argument("--dry-run", action="store_true", help="don't commit changes to DB")
+    argp.add_argument("--skip-prices", action="store_true", help="don't import historical prices (95+%% of DB size and import time; useful for debugging)")
     argp.add_argument("--version", action="version", version="%(prog)s " + __version__)
     args = argp.parse_args()
 

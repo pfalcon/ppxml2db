@@ -21,7 +21,7 @@ def init(dbname):
         sqllog = open(dbname + ".sql", "w")
 
 
-def execute_insert(sql, values = ()):
+def execute_dml(sql, values = ()):
     if LOG_SQL_TO_FILE:
         sqllog.write("%s %s\n" % (sql, values))
         return
@@ -45,7 +45,7 @@ def insert(table, fields=None, or_replace=False, **kw):
         field_vals.append(v)
         qmarks.append("?")
     sql = "INSERT%s INTO %s(%s) VALUES (%s)" % (repl_clause, table, ", ".join(field_names), ", ".join(qmarks))
-    id = execute_insert(sql, field_vals)
+    id = execute_dml(sql, field_vals)
     return id
 
 

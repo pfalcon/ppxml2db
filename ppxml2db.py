@@ -502,13 +502,13 @@ class PortfolioPerformanceXML2DB:
                         self.handle_account(el, self.el_order)
                     elif el.tag == "account":
                         xmlid = el.get("reference")
-                        dbhelper.execute_insert("UPDATE account SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
+                        dbhelper.execute_dml("UPDATE account SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
                 elif el.tag in ("portfolio", "portfolioFrom", "portfolioTo"):
                     if el.get("id"):
                         self.handle_portfolio(el, self.el_order)
                     elif el.tag == "portfolio":
                         xmlid = el.get("reference")
-                        dbhelper.execute_insert("UPDATE account SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
+                        dbhelper.execute_dml("UPDATE account SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
 
                 elif el.tag == "account-transaction":
                     if el.get("id"):
@@ -516,7 +516,7 @@ class PortfolioPerformanceXML2DB:
                         self.handle_xact("account", self.cur_uuid(), el, self.el_order)
                     else:
                         xmlid = el.get("reference")
-                        dbhelper.execute_insert("UPDATE xact SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
+                        dbhelper.execute_dml("UPDATE xact SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
 
                 elif el.tag == "accountTransaction":
                     if el.get("id"):
@@ -531,7 +531,7 @@ class PortfolioPerformanceXML2DB:
                         self.handle_xact("portfolio", self.cur_uuid(), el, self.el_order)
                     else:
                         xmlid = el.get("reference")
-                        dbhelper.execute_insert("UPDATE xact SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
+                        dbhelper.execute_dml("UPDATE xact SET _order=? WHERE _xmlid=?", (self.el_order, xmlid))
 
                 elif el.tag in ("portfolioTransaction",):
                     if el.get("id"):

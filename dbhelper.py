@@ -7,12 +7,26 @@ LOG_SQL_TO_FILE = 0
 
 log = logging.getLogger(__name__)
 
+dbtype = None
 db = None
+param_mark = None
 
 sqllog = None
 
 
-def init(dbname):
+def init(_dbtype, dbname):
+    global dbtype, param_mark
+    dbtype = _dbtype
+
+    if dbtype == "pgsql":
+        param_mark = "%s"
+        init_pgsql(dbname)
+    else:
+        param_mark = "?"
+        init_sqlite(dbname)
+
+
+def init_sqlite(dbname):
     global db
     db = sqlite3.connect(dbname)
     db.row_factory = sqlite3.Row
@@ -21,16 +35,30 @@ def init(dbname):
         sqllog = open(dbname + ".sql", "w")
 
 
+def init_pgsql(dbname):
+    import psycopg
+    global db
+    db = psycopg.connect(dbname, row_factory=psycopg.rows.namedtuple_row)
+    execute_dml("SET session_replication_role = 'replica'")
+    execute_dml("BEGIN")
+
+
 def execute_dml(sql, values = (), returning=None):
     if returning:
         sql += " RETURNING " + returning
+    if dbtype == "pgsql":
+        sql = sql.replace("?", "%s")
     if LOG_SQL_TO_FILE:
         sqllog.write("%s %s\n" % (sql, values))
         return
     cursor = db.cursor()
     log.debug(sql + " " + str(values))
     cursor.execute(sql, values)
-    return cursor.lastrowid
+    if dbtype == "pgsql":
+        if returning:
+            return cursor.fetchone()[0]
+    else:
+        return cursor.lastrowid
 
 
 def insert(table, fields=None, or_replace=False, returning=None, **kw):
@@ -45,7 +73,7 @@ def insert(table, fields=None, or_replace=False, returning=None, **kw):
     for k, v in fields.items():
         field_names.append(k)
         field_vals.append(v)
-        qmarks.append("?")
+        qmarks.append(param_mark)
     sql = "INSERT%s INTO %s(%s) VALUES (%s)" % (repl_clause, table, ", ".join(field_names), ", ".join(qmarks))
     id = execute_dml(sql, field_vals, returning)
     return id

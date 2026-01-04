@@ -600,8 +600,9 @@ def main():
 
 if __name__ == "__main__":
     argp = argparse.ArgumentParser(description="Export Sqlite DB to PortfolioPerformance XML file")
-    argp.add_argument("db_file", help="input DB file")
+    argp.add_argument("db", help="input DB (filename/connect string)")
     argp.add_argument("xml_file", nargs="?", help="output XML file (stdout if not provided)")
+    argp.add_argument("--dbtype", choices=("sqlite", "pgsql"), default="sqlite", help="select database type")
     argp.add_argument("--sort-events", action="store_true", help="sort events by date (then description)")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
     argp.add_argument("--version", action="version", version="%(prog)s " + __version__)
@@ -610,5 +611,5 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    dbhelper.init(args.db_file)
+    dbhelper.init(args.dbtype, args.db)
     main()

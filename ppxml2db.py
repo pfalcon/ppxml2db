@@ -620,7 +620,8 @@ class PortfolioPerformanceXML2DB:
 if __name__ == "__main__":
     argp = argparse.ArgumentParser(description="Import PortfolioPerformance XML file to Sqlite DB")
     argp.add_argument("xml_file", help="input XML file")
-    argp.add_argument("db_file", help="output DB file")
+    argp.add_argument("db", help="output DB (filename/connect string)")
+    argp.add_argument("--dbtype", choices=("sqlite", "pgsql"), default="sqlite", help="select database type")
     argp.add_argument("--debug", action="store_true", help="enable debug logging")
     argp.add_argument("--dry-run", action="store_true", help="don't commit changes to DB")
     argp.add_argument("--skip-prices", action="store_true", help="don't import historical prices (95+%% of DB size and import time; useful for debugging)")
@@ -630,7 +631,7 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    dbhelper.init(args.db_file)
+    dbhelper.init(args.dbtype, args.db)
 
     with open(args.xml_file, "rb") as f:
         conv = PortfolioPerformanceXML2DB(f)

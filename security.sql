@@ -1,4 +1,5 @@
 CREATE TABLE security(
+_id INTEGER NOT NULL PRIMARY KEY,
 uuid VARCHAR(36) NOT NULL,
 onlineId VARCHAR(64),
 name VARCHAR(255),
@@ -16,8 +17,8 @@ feedURL VARCHAR(512),
 latestFeed VARCHAR(32),
 latestFeedURL VARCHAR(512),
 isRetired INT NOT NULL DEFAULT 0,
-updatedAt VARCHAR(64) NOT NULL,
-PRIMARY KEY(uuid)
+updatedAt VARCHAR(64) NOT NULL
 );
 
+CREATE UNIQUE INDEX security__uuid ON security(uuid);
 CREATE INDEX security__tickerSymbol ON security(tickerSymbol);

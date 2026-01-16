@@ -1,33 +1,19 @@
 PYTHON = python3
-DBTOOL = sqlite3
 DB = pp.db
-TABLES = .account .account_attr \
-    .security .security_attr .security_event .security_prop .latest_price .price \
-    .watchlist .watchlist_security \
-    .xact .xact_unit .xact_cross_entry \
-    .taxonomy .taxonomy_category .taxonomy_data .taxonomy_assignment .taxonomy_assignment_data \
-    .dashboard \
-    .property \
-    .bookmark .attribute_type .config_set .config_entry
 
 
 all:
 
 init: tables
 
-tables: $(TABLES)
+tables: .create-db
 
 reload-data:
 	rm -f $(DATA)
 	make all
 
-.%: %.sql .create-db
-	-echo "DROP TABLE IF EXISTS $(patsubst .%,%,$@);" | $(DBTOOL) $(DB)
-	$(DBTOOL) $(DB) < $<
-	touch $@
-
-.create-db: 
-	-rm $(DB)
+.create-db:
+	python3 ppxml2db_init.py --recreate $(DB)
 	touch $@
 
 clean:

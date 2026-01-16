@@ -1,6 +1,6 @@
 CREATE TABLE security(
 _id INTEGER NOT NULL PRIMARY KEY,
-uuid VARCHAR(36) NOT NULL,
+uuid VARCHAR(36) NOT NULL UNIQUE,
 onlineId VARCHAR(64),
 name VARCHAR(255),
 -- Yes, can be absent (dax.xml).

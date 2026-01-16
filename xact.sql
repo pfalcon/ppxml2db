@@ -1,6 +1,6 @@
 CREATE TABLE xact(
 _id INTEGER NOT NULL PRIMARY KEY,
-uuid VARCHAR(36) NOT NULL,
+uuid VARCHAR(36) NOT NULL UNIQUE,
 acctype VARCHAR(10) NOT NULL, -- requires to instantiate AccountTransaction vs PortfolioTransaction, but redundant otherwise
 account VARCHAR(36) NOT NULL REFERENCES account(uuid),
 date VARCHAR(32) NOT NULL,

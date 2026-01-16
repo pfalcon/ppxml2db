@@ -61,6 +61,15 @@ def execute_dml(sql, values = (), returning=None):
         return cursor.lastrowid
 
 
+def executescript(sql):
+    cursor = db.cursor()
+    log.debug(sql)
+    if dbtype == "pgsql":
+        cursor.execute(sql)
+    else:
+        cursor.executescript(sql)
+
+
 def insert(table, fields=None, or_replace=False, returning=None, **kw):
     repl_clause = ""
     if or_replace:

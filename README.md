@@ -44,19 +44,18 @@ or next earnings date - possibilities are limitless.
 ## What's in the repository
 
 * `*.sql` - Database schema, one table per file.
+* `ppxml2db_init.py` - Script to create tables in an empty database.
 * `ppxml2db.py` - Script to import XML file into a database.
 * `db2ppxml.py` - Script to export database to XML file.
-* `Makefile` - Makefile to create an empty database.
 
 ## Example usage
 
-Note that using `Makefile` requires POSIX-like operating system
-(e.g. Linux or Windows Subsystem for Linux) with the `make`
-tool. Main scripts are written in [Python3](https://www.python.org).
+The ppxml2db tools are written in [Python3](https://www.python.org),
+any modern version should work, at the time of writing, it was tested
+with Python 3.8-3.12.
 
-NOTE: Since version 1.0, ppxml2db requires "XML with 'id' attributes"
-XML variant of PortfolioPerformance, as introduced in PortfolioPerformance
-0.70.3.
+ppxml2db requires "XML with 'id' attributes" XML variant of
+PortfolioPerformance, as introduced in PortfolioPerformance 0.70.3.
 
 1. Start PortfolioPerformance. Make sure you see "Welcome" page.
 2. On the "Welcome" page, click "Open the Kommer sample file".
@@ -64,7 +63,7 @@ XML variant of PortfolioPerformance, as introduced in PortfolioPerformance
 4. In the application menu, choose: File -> Save as -> XML with "id" attributes.
 4. Copy the file to this project's directory for easy access.
 5. Create an empty database with all the needed tables:
-   `make -B init DB=kommer.db`
+   `python3 ppxml2db_init.py kommer.db`
 6. Import the XML into the database:
    `python3 ppxml2db.py kommer.xml kommer.db`
 7. Export the database to a new XML file:
@@ -73,7 +72,7 @@ XML variant of PortfolioPerformance, as introduced in PortfolioPerformance
    `diff -u kommer.xml kommer.xml.out`
 
 Now let's do something pretty simple, yet useful, and already something
-which PP itself doesn't do: show how many securities are in this portfolio:
+which PP itself doesn't do: show how many securities are in a portfolio:
 
 ```
 echo "SELECT COUNT(*) FROM security;" | sqlite3 kommer.db

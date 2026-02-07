@@ -178,8 +178,9 @@ class PortfolioPerformanceXML2DB:
         dbhelper.insert("account", fields)
         self.handle_account_attrs(el, fields["uuid"])
 
-    def handle_watchlist(self, el):
+    def handle_watchlist(self, el, orderno):
         fields = self.parse_props(el, ["name"])
+        fields["_order"] = orderno
         id = dbhelper.insert("watchlist", fields, returning="_id")
         for sec in el.findall("securities/security"):
             fields = {"list": id, "security": self.uuid(sec)}
@@ -496,7 +497,7 @@ class PortfolioPerformanceXML2DB:
                 elif el.tag == "security":
                     self.handle_security(el)
                 elif el.tag == "watchlist":
-                    self.handle_watchlist(el)
+                    self.handle_watchlist(el, self.el_order)
                 elif el.tag in ("account", "accountFrom", "accountTo", "referenceAccount"):
                     if el.get("id"):
                         self.handle_account(el, self.el_order)

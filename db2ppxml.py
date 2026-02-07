@@ -472,7 +472,7 @@ def main():
     securities.wr_end()
 
     watchlists = ET.SubElement(root, "watchlists")
-    for wlist_r in dbhelper.select("watchlist"):
+    for wlist_r in dbhelper.select("watchlist", order="_order"):
         wlist = ET_SubElementWId(watchlists, "watchlist")
         make_prop(wlist, wlist_r, "name")
         secs = ET.SubElement(wlist, "securities")

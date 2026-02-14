@@ -393,61 +393,6 @@ class PortfolioPerformanceXML2DB:
         self.xml = xml
         self.refcache = {}
 
-    def parse(self):
-        props = ["version", "baseCurrency"]
-        fields = self.parse_props(self.etree, props)
-        for n in props:
-            dbhelper.insert("property", {"name": n, "value": fields[n], "special": 1})
-
-        _log.info("Handling <security>")
-        security_els = self.etree.findall("securities/security")
-        for s in security_els:
-            self.handle_security(s)
-
-        _log.info("Handling <watchlist>")
-        for w in self.etree.findall("watchlists/watchlist"):
-            self.handle_watchlist(w)
-
-        _log.info("Handling <account>")
-        account_els = self.etree.findall("accounts/account")
-        for el in account_els:
-            self.handle_account(el)
-
-        _log.info("Handling <portfolio>")
-        portfolio_els = self.etree.findall("portfolios/portfolio")
-        for el in portfolio_els:
-            self.handle_portfolio(el)
-
-        _log.info("Handling <account-transaction>")
-        for acc_el in self.etree.xpath(".//*[self::account or self::accountTo]"):
-            acc_uuid = self.uuid(acc_el)
-            for xact_el in acc_el.findall(".//account-transaction"):
-                self.handle_xact("account", acc_uuid, xact_el)
-
-        _log.info("Handling <portfolio-transaction>")
-        for acc_el in self.etree.xpath(".//*[self::portfolio or self::portfolioTo]"):
-            acc_uuid = self.uuid(acc_el)
-            for xact_el in acc_el.findall(".//portfolio-transaction"):
-                self.handle_xact("portfolio", acc_uuid, xact_el)
-
-        _log.info("Handling <crossEntry>")
-        for x_el in self.etree.findall("//crossEntry"):
-            self.handle_crossEntry(x_el)
-
-        _log.info("Handling <taxonomy>")
-        for taxon_el in self.etree.findall("taxonomies/taxonomy"):
-            self.handle_taxonomy(taxon_el)
-
-        _log.info("Handling <dashboard>")
-        for dashb_el in self.etree.findall("dashboards/dashboard"):
-            self.handle_dashboard(dashb_el)
-
-        _log.info("Handling <properties>")
-        self.handle_toplevel_properties(self.etree.find("properties"))
-
-        _log.info("Handling <settings>")
-        self.handle_settings(self.etree.find("settings"))
-
     def cur_uuid(self):
         return self.container_stack[-1][1]
 

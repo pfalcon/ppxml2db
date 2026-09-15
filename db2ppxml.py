@@ -357,6 +357,7 @@ def make_taxonomy_level(etree, pel, level_r):
         output_els[level_r["uuid"]] = level
         make_prop(level, level_r, "id", "uuid")
         make_prop(level, level_r, "name")
+        make_prop(level, level_r, "description")
         make_prop(level, level_r, "color")
 
         if level_r["parent"]:
@@ -519,7 +520,12 @@ def main():
         dashb = ET.SubElement(dashboards, "dashboard")
         dashb.set("name", dashb_r["name"])
         make_prop(dashb, dashb_r, "id")
-        make_configuration(dashb, json.loads(dashb_r["config_json"]))
+        # PP writes <configuration/> for widgets even when empty, but omits the
+        # element for dashboards that have none - mirroring that keeps the
+        # round-trip diff clean
+        dashb_conf = json.loads(dashb_r["config_json"])
+        if dashb_conf:
+            make_configuration(dashb, dashb_conf)
         columns = ET.SubElement(dashb, "columns")
         for col_j in json.loads(dashb_r["columns_json"]):
             col = ET.SubElement(columns, "column")

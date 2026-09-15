@@ -123,7 +123,19 @@ class PortfolioPerformanceXML2DB:
             props = ["date", "type", "details"]
             fields = self.parse_props(event_el, props)
             fields["security"] = self.cur_uuid()
+            fields["_order"] = self.el_order
             dbhelper.insert("security_event", fields)
+
+    def handle_dividend_event(self, event_el):
+            props = ["date", "type", "source", "paymentDate"]
+            fields = self.parse_props(event_el, props)
+            amount_el = event_el.find("amount")
+            if amount_el is not None:
+                fields["amount"] = int(amount_el.get("amount"))
+                fields["currency"] = amount_el.get("currency")
+            fields["security"] = self.cur_uuid()
+            fields["_order"] = self.el_order
+            dbhelper.insert("security_event_dividend", fields)
 
     def handle_security(self, el):
         if el.get("reference") is not None:
@@ -438,6 +450,8 @@ class PortfolioPerformanceXML2DB:
                     self.handle_latest(el)
                 elif el.tag == "event":
                     self.handle_event(el)
+                elif el.tag == "dividendEvent":
+                    self.handle_dividend_event(el)
 
                 elif el.tag == "security":
                     self.handle_security(el)

@@ -286,7 +286,7 @@ class PortfolioPerformanceXML2DB:
             self.handle_taxonomy_level(fields["uuid"], None, root_el)
 
     def handle_taxonomy_level(self, taxon_uuid, parent_uuid, level_el):
-        props = ["id", "name", "color", "weight", "rank"]
+        props = ["id", "name", "description", "color", "weight", "rank"]
         fields = self.parse_props(level_el, props)
         ren(fields, "id", "uuid")
         fields["parent"] = parent_uuid

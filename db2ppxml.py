@@ -357,6 +357,7 @@ def make_taxonomy_level(etree, pel, level_r):
         output_els[level_r["uuid"]] = level
         make_prop(level, level_r, "id", "uuid")
         make_prop(level, level_r, "name")
+        make_prop(level, level_r, "description")
         make_prop(level, level_r, "color")
 
         if level_r["parent"]:

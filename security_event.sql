@@ -3,5 +3,6 @@ _id INTEGER NOT NULL PRIMARY KEY,
 security VARCHAR(36) NOT NULL REFERENCES security(uuid),
 date VARCHAR(36) NOT NULL,
 type VARCHAR(32) NOT NULL,
-details TEXT
+details TEXT,
+_order INT
 );

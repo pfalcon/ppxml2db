@@ -12,6 +12,7 @@ SCHEMA = [
     "security",
     "security_attr",
     "security_event",
+    "security_event_dividend",
     "security_prop",
     "latest_price",
     "price",

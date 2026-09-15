@@ -449,14 +449,31 @@ def main():
         make_attributes(sec, attr_rows)
 
         events = ET.SubElement(sec, "events")
-        order_args = {}
-        if args.sort_events:
-            order_args = {"order": "date, details"}
-        for event_r in dbhelper.select("security_event", where="security='%s'" % sec_r["uuid"], **order_args):
-            event = ET.SubElement(events, "event")
-            make_prop(event, event_r, "date")
-            make_prop(event, event_r, "type")
-            make_prop(event, event_r, "details")
+        event_rows = []
+        for tag, table in (("event", "security_event"), ("dividendEvent", "security_event_dividend")):
+            for r in dbhelper.select(table, where="security='%s'" % sec_r["uuid"]):
+                if args.sort_events:
+                    # both tables sort the same way, so the merge below keeps date order
+                    key = (r["date"] or "", r["type"] or "")
+                else:
+                    key = (str(r["_order"] if r["_order"] is not None else r["_id"]).zfill(12),)
+                event_rows.append((key, tag, r))
+        for _, tag, r in sorted(event_rows, key=lambda x: x[0]):
+            event = ET.SubElement(events, tag)
+            if tag == "event":
+                make_prop(event, r, "date")
+                make_prop(event, r, "type")
+                make_prop(event, r, "details")
+            else:
+                make_prop(event, r, "date")
+                make_prop(event, r, "type")
+                make_prop(event, r, "source")
+                make_prop(event, r, "paymentDate")
+                if r["amount"] is not None:
+                    amount = ET.SubElement(event, "amount")
+                    amount.set("currency", r["currency"])
+                    amount.set("amount", str(r["amount"]))
+                    amount.wr_nb()
             event.wr_end()
         events.wr_end()
 

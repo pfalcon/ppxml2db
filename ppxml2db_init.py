@@ -20,6 +20,8 @@ SCHEMA = [
     "xact",
     "xact_unit",
     "xact_cross_entry",
+    "plan",
+    "plan_transaction",
     "taxonomy",
     "taxonomy_category",
     "taxonomy_data",
